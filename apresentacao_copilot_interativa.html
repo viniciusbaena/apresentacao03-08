@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft 365 Copilot — Além do Básico</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ms-blue: #0078D4; --ms-blue-dark: #005A9E; --ms-purple: #8764B8;
+            --ms-teal: #00B294; --ms-orange: #FF8C00; --ms-green: #107C10;
+            --bg: #0a0e1a; --card: #111827; --card-hover: #1a2332;
+            --text: #f0f4f8; --text-muted: #94a3b8; --border: rgba(255,255,255,0.06);
+            --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text);
+            overflow: hidden; height: 100vh; width: 100vw;
+        }
+        .particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .particle { position: absolute; width: 3px; height: 3px; background: var(--ms-blue); border-radius: 50%; opacity: 0; animation: float 20s infinite linear; }
+        @keyframes float { 0% { transform: translateY(110vh); opacity: 0; } 10% { opacity: 0.3; } 90% { opacity: 0.3; } 100% { transform: translateY(-10vh); opacity: 0; } }
+
+        .slide-container { position: relative; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; z-index: 1; }
+        .slide {
+            position: absolute; width: 94%; max-width: 1200px; height: 92vh;
+            background: linear-gradient(145deg, var(--card) 0%, #0d1117 100%);
+            border-radius: 20px; border: 1px solid var(--border);
+            padding: 30px 40px; display: none; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            opacity: 0; transform: translateY(30px) scale(0.98);
+            transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+        .slide.active { display: flex; opacity: 1; transform: translateY(0) scale(1); }
+        .slide.prev { display: flex; opacity: 0; transform: translateY(-30px) scale(0.98); }
+
+        h1 { font-size: 2.8rem; font-weight: 800; line-height: 1.15; margin-bottom: 14px;
+             background: linear-gradient(135deg, #fff 0%, var(--ms-blue) 50%, var(--ms-purple) 100%);
+             -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+        h3 { font-size: 1.1rem; font-weight: 600; color: var(--ms-blue); margin-bottom: 6px; }
+        p { font-size: 1rem; color: var(--text-muted); line-height: 1.55; max-width: 700px; }
+        .subtitle { font-size: 1.15rem; color: var(--text-muted); margin-bottom: 16px; }
+        .tag {
+            display: inline-block; padding: 5px 14px; border-radius: 20px;
+            background: rgba(0,120,212,0.12); color: var(--ms-blue);
+            font-size: 0.72rem; font-weight: 600; letter-spacing: 0.5px;
+            text-transform: uppercase; margin-bottom: 12px; border: 1px solid rgba(0,120,212,0.25);
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px;
+            background: linear-gradient(135deg, var(--ms-blue), var(--ms-blue-dark));
+            color: white; border: none; border-radius: 10px; font-size: 0.95rem;
+            font-weight: 600; cursor: pointer; margin-top: 16px; transition: all 0.3s;
+            text-decoration: none; box-shadow: 0 4px 15px rgba(0,120,212,0.25);
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,120,212,0.4); }
+        .btn-outline { background: transparent; border: 2px solid var(--ms-blue); box-shadow: none; color: var(--ms-blue); }
+        .btn-outline:hover { background: rgba(0,120,212,0.1); }
+        .btn-sm { padding: 8px 18px; font-size: 0.85rem; margin-top: 10px; }
+
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; width: 100%; margin-top: 14px; }
+        .card {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            border-radius: 14px; padding: 18px; text-align: left; transition: all 0.3s;
+            position: relative; overflow: hidden;
+        }
+        .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--ms-blue), var(--ms-purple)); opacity: 0; transition: opacity 0.3s; }
+        .card:hover { transform: translateY(-3px); border-color: rgba(0,120,212,0.25); background: var(--card-hover); }
+        .card:hover::before { opacity: 1; }
+        .card .icon { font-size: 1.6rem; margin-bottom: 8px; display: block; }
+        .card h4 { font-size: 0.95rem; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+        .card p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.45; max-width: none; }
+
+        /* APP LOGOS SVG */
+        .app-logo { width: 44px; height: 44px; margin: 0 auto 10px; }
+
+        .maturity-track { display: flex; align-items: stretch; gap: 0; width: 100%; max-width: 900px; margin-top: 14px; }
+        .maturity-step {
+            flex: 1; padding: 14px 8px; text-align: center; background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border); position: relative; cursor: pointer; transition: all 0.3s;
+        }
+        .maturity-step:first-child { border-radius: 10px 0 0 10px; }
+        .maturity-step:last-child { border-radius: 0 10px 10px 0; }
+        .maturity-step:not(:last-child)::after { content: '→'; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; color: var(--ms-blue); z-index: 2; background: var(--card); padding: 0 2px; }
+        .maturity-step:hover { background: rgba(0,120,212,0.06); }
+        .maturity-step .step-num {
+            width: 28px; height: 28px; border-radius: 50%; background: var(--bg); border: 2px solid var(--border);
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;
+            font-weight: 700; font-size: 0.75rem; transition: all 0.3s;
+        }
+        .maturity-step:hover .step-num { border-color: var(--ms-blue); color: var(--ms-blue); }
+        .maturity-step h4 { font-size: 0.78rem; font-weight: 600; margin-bottom: 3px; }
+        .maturity-step .step-desc {
+            font-size: 0.7rem; color: var(--text-muted); max-width: none; line-height: 1.35;
+            max-height: 0; overflow: hidden; opacity: 0; transition: all 0.4s ease;
+        }
+        .maturity-step.active .step-desc { max-height: 80px; opacity: 1; margin-top: 5px; }
+        .maturity-step.active { background: rgba(0,120,212,0.1); border-color: var(--ms-blue); }
+        .maturity-step.active .step-num { background: var(--ms-blue); color: white; border-color: var(--ms-blue); }
+
+        .poll-box { width: 100%; max-width: 700px; margin-top: 10px; }
+        .poll-item {
+            margin: 6px 0; background: rgba(255,255,255,0.02); border-radius: 10px;
+            overflow: hidden; cursor: pointer; border: 1px solid var(--border); transition: all 0.3s; position: relative;
+        }
+        .poll-item:hover { border-color: var(--ms-blue); }
+        .poll-fill {
+            height: 40px; background: linear-gradient(90deg, var(--ms-blue), var(--ms-purple));
+            border-radius: 10px; width: 0%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; align-items: center; padding-left: 14px; position: relative;
+        }
+        .poll-fill.teal { background: linear-gradient(90deg, var(--ms-teal), #00d4aa); }
+        .poll-fill.orange { background: linear-gradient(90deg, var(--ms-orange), #ffb347); }
+        .poll-fill.purple { background: linear-gradient(90deg, var(--ms-purple), #a78bfa); }
+        .poll-fill.green { background: linear-gradient(90deg, var(--ms-green), #4ade80); }
+        .poll-label { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 600; z-index: 2; white-space: nowrap; font-size: 0.82rem; }
+        .poll-pct { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-weight: 700; font-size: 0.95rem; z-index: 2; }
+        .poll-desc { font-size: 0.72rem; color: var(--text-muted); padding: 3px 14px 6px; text-align: left; }
+
+        .qr-wrap { display: flex; gap: 20px; align-items: center; margin-top: 10px; background: rgba(255,255,255,0.02); padding: 14px 20px; border-radius: 12px; border: 1px solid var(--border); }
+        .qr-img { background: white; padding: 10px; border-radius: 8px; box-shadow: 0 6px 25px rgba(0,0,0,0.3); }
+        .qr-img img { width: 110px; height: 110px; display: block; }
+        .qr-text { text-align: left; }
+        .qr-text h3 { color: var(--ms-teal); margin-bottom: 6px; font-size: 1rem; }
+        .qr-text p { font-size: 0.85rem; margin-bottom: 3px; max-width: 300px; }
+
+        .compare-table { width: 100%; max-width: 900px; margin-top: 12px; border-collapse: collapse; font-size: 0.88rem; }
+        .compare-table th, .compare-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+        .compare-table th { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 600; }
+        .compare-table .col-copilot { color: var(--ms-blue); font-weight: 600; }
+        .compare-table .col-agent { color: var(--ms-purple); font-weight: 600; }
+
+        .sorter-game { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; max-width: 800px; margin-top: 12px; }
+        .sorter-col { background: rgba(255,255,255,0.02); border: 2px dashed var(--border); border-radius: 12px; padding: 12px; min-height: 140px; transition: all 0.3s; }
+        .sorter-col.assist { border-color: rgba(0,120,212,0.3); }
+        .sorter-col.agent { border-color: rgba(135,100,184,0.3); }
+        .sorter-col.drag-over { background: rgba(0,120,212,0.08); border-color: var(--ms-blue); }
+        .sorter-col h4 { font-size: 0.85rem; margin-bottom: 8px; text-align: center; }
+        .sorter-col.assist h4 { color: var(--ms-blue); }
+        .sorter-col.agent h4 { color: var(--ms-purple); }
+        .sorter-item {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px;
+            padding: 8px 12px; margin: 5px 0; cursor: grab; font-size: 0.8rem; transition: all 0.2s;
+            display: flex; align-items: center; gap: 8px; text-align: left;
+        }
+        .sorter-item:hover { border-color: var(--ms-blue); background: rgba(0,120,212,0.08); }
+        .sorter-item.correct { border-color: var(--success); background: rgba(16,185,129,0.12); }
+        .sorter-item.wrong { border-color: var(--danger); background: rgba(239,68,68,0.12); }
+        .sorter-item .check { margin-left: auto; font-size: 0.95rem; opacity: 0; }
+        .sorter-item.revealed .check { opacity: 1; }
+        .sorter-pool { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 10px; max-width: 800px; }
+
+        .agent-showcase { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; width: 100%; margin-top: 12px; }
+        .agent-card {
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 14px;
+            padding: 18px; text-align: left; transition: all 0.4s; cursor: pointer; position: relative;
+        }
+        .agent-card:hover { transform: translateY(-3px); border-color: rgba(0,120,212,0.25); box-shadow: 0 12px 35px rgba(0,0,0,0.3); }
+        .agent-card .badge { display: inline-block; padding: 3px 8px; border-radius: 5px; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+        .badge-copilot { background: rgba(0,120,212,0.15); color: var(--ms-blue); }
+        .badge-agent { background: rgba(135,100,184,0.15); color: var(--ms-purple); }
+        .agent-card h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+        .agent-card p { font-size: 0.78rem; line-height: 1.45; max-width: none; }
+        .agent-card .prompt-box {
+            background: #0d1117; border-radius: 8px; padding: 8px 10px; margin-top: 8px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--ms-teal);
+            border: 1px solid rgba(0,178,148,0.15); min-height: 30px;
+        }
+        .typing-cursor::after { content: '|'; animation: blink 1s infinite; }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+        /* TIMELINE REDESIGN */
+        .timeline-wrap { width: 100%; max-width: 950px; margin-top: 16px; }
+        .timeline-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .timeline-header span { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .timeline-bar { height: 4px; background: linear-gradient(90deg, var(--ms-blue), var(--ms-purple), var(--ms-teal), var(--ms-orange)); border-radius: 4px; position: relative; margin-bottom: 16px; }
+        .timeline-dots { display: flex; justify-content: space-between; position: relative; top: -10px; }
+        .tl-dot-wrap { text-align: center; flex: 1; }
+        .tl-dot {
+            width: 44px; height: 44px; border-radius: 50%; background: var(--card); border: 3px solid var(--ms-blue);
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 8px;
+            font-size: 1.3rem; box-shadow: 0 0 20px rgba(0,120,212,0.25); transition: all 0.3s;
+        }
+        .tl-dot-wrap:hover .tl-dot { transform: scale(1.1); box-shadow: 0 0 30px rgba(0,120,212,0.4); }
+        .tl-dot-wrap h4 { font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; }
+        .tl-dot-wrap p { font-size: 0.72rem; max-width: none; line-height: 1.35; padding: 0 4px; }
+
+        .prompt-box {
+            background: #0d1117; border-radius: 10px; padding: 12px 16px; margin-top: 12px;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: var(--ms-teal);
+            border: 1px solid rgba(0,178,148,0.15); text-align: left; max-width: 850px; width: 100%;
+        }
+
+        .video-container { width: 100%; height: 65vh; display: flex; align-items: center; justify-content: center; }
+        .video-container video { max-width: 100%; max-height: 100%; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+
+        .nav-bar {
+            position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 10px; align-items: center; background: rgba(10,14,26,0.85);
+            padding: 8px 18px; border-radius: 50px; backdrop-filter: blur(16px);
+            border: 1px solid var(--border); z-index: 100; font-size: 0.72rem; color: var(--text-muted);
+        }
+        .nav-bar kbd { background: rgba(255,255,255,0.08); padding: 3px 7px; border-radius: 5px; font-family: 'JetBrains Mono', monospace; color: var(--text); font-size: 0.68rem; }
+        .slide-badge { position: fixed; top: 18px; right: 18px; background: rgba(10,14,26,0.85); padding: 8px 16px; border-radius: 50px; backdrop-filter: blur(16px); border: 1px solid var(--border); z-index: 100; font-weight: 600; font-size: 0.8rem; }
+        .progress-bar { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--ms-blue), var(--ms-purple)); transition: width 0.5s; z-index: 101; }
+
+        .confetti { position: fixed; z-index: 9999; animation: confettiFall 3s ease-out forwards; }
+        @keyframes confettiFall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+
+        @media (max-width: 900px) {
+            h1 { font-size: 1.5rem; } h2 { font-size: 1.2rem; }
+            .slide { padding: 18px; width: 96%; height: 94vh; }
+            .card-grid { grid-template-columns: 1fr; }
+            .agent-showcase { grid-template-columns: 1fr; }
+            .maturity-track { flex-direction: column; }
+            .maturity-step { border-radius: 10px !important; margin: 3px 0; }
+            .maturity-step::after { display: none; }
+            .qr-wrap { flex-direction: column; padding: 12px; }
+            .qr-img img { width: 90px; height: 90px; }
+            .sorter-game { grid-template-columns: 1fr; }
+            .compare-table { font-size: 0.78rem; }
+            .compare-table th, .compare-table td { padding: 6px; }
+            .timeline-dots { flex-direction: column; gap: 10px; }
+            .tl-dot-wrap { display: flex; align-items: center; gap: 12px; text-align: left; }
+            .tl-dot { margin: 0; flex-shrink: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progress"></div>
+    <div class="particles" id="particles"></div>
+    <div class="slide-badge"><span id="curr">1</span> / <span id="tot">19</span></div>
+    <div class="slide-container">
+
+        <!-- SLIDE 1: CAPA -->
+        <div class="slide active">
+            <div class="tag">Sessão 2 — Nível Avançado</div>
+            <h1>Microsoft 365 Copilot</h1>
+            <p class="subtitle">Além do Básico: Maturidade, Agentes e o Futuro do Trabalho Inteligente</p>
+            <p>30 minutos para transformar você de usuário de IA em arquiteto de agentes inteligentes.</p>
+            <button class="btn" onclick="nextSlide()">Iniciar Jornada →</button>
+        </div>
+
+        <!-- SLIDE 2: RECAPITULAÇÃO -->
+        <div class="slide">
+            <div class="tag">Recapitulação — Sessão 1</div>
+            <h2>O que já dominamos</h2>
+            <p>Na última sessão, vimos o Copilot como <strong>assistente</strong> nos apps do dia a dia. Hoje, vamos além.</p>
+            <div class="card-grid" style="max-width: 900px;">
+                <div class="card" style="text-align:center;">
+                    <svg class="app-logo" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="10" fill="#2B579A"/><path d="M14 12h14v4H18v6h8v4h-8v10h-4V12z" fill="white"/><path d="M30 12h4v24h-4V12z" fill="white" opacity="0.3"/></svg>
+                    <h4>Word</h4>
+                    <p>Redigir, resumir e reformular documentos com prompts naturais.</p>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <svg class="app-logo" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="10" fill="#217346"/><path d="M14 12h8l6 12-6 12h-8l6-12-6-12z" fill="white"/><path d="M30 12h4v24h-4V12z" fill="white" opacity="0.3"/></svg>
+                    <h4>Excel</h4>
+                    <p>Análise de dados, fórmulas e insights com linguagem natural.</p>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <svg class="app-logo" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="10" fill="#D24726"/><path d="M14 12h10c5 0 8 3 8 7s-3 7-8 7h-4v8h-6V12zm6 4v6h4c2 0 3-1 3-3s-1-3-3-3h-4z" fill="white"/><path d="M36 12h4v24h-4V12z" fill="white" opacity="0.3"/></svg>
+                    <h4>PowerPoint</h4>
+                    <p>Criar slides a partir de documentos e ideias em segundos.</p>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <svg class="app-logo" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="10" fill="#0078D4"/><path d="M12 14h10v20H12V14z" fill="white"/><path d="M26 14h10v20H26V14z" fill="white" opacity="0.4"/><path d="M24 18l6 6-6 6" stroke="white" stroke-width="2" fill="none"/></svg>
+                    <h4>Outlook</h4>
+                    <p>Resumir threads, sugerir respostas e gerenciar a caixa de entrada.</p>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <svg class="app-logo" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><rect width="48" height="48" rx="10" fill="#6264A7"/><circle cx="18" cy="20" r="6" fill="white"/><circle cx="32" cy="16" r="4" fill="white" opacity="0.6"/><path d="M12 32c0-4 4-6 8-6s8 2 8 6v4H12v-4z" fill="white"/><path d="M28 28c0-3 3-5 6-5s6 2 6 5v3H28v-3z" fill="white" opacity="0.5"/></svg>
+                    <h4>Teams</h4>
+                    <p>Resumir reuniões, capturar action items e responder chats.</p>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--ms-purple),var(--ms-blue));display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.6rem;">🚀</div>
+                    <h4>Hoje: O Próximo Nível</h4>
+                    <p><strong>Maturidade de uso</strong> e criação de <strong>agentes customizados</strong>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 3: O PROBLEMA / PARADOXO -->
+        <div class="slide">
+            <div class="tag">O Desafio</div>
+            <h2>O Paradoxo da Produtividade com IA</h2>
+            <p style="max-width: 800px; font-size: 1rem;">Nas primeiras décadas após a eletricidade, as fábricas simplesmente <strong>substituíram</strong> motores a vapor por motores elétricos no mesmo lugar. Resultado? <span style="color:var(--ms-orange)">Quase zero ganho de produtividade</span>.</p>
+            <div class="card-grid" style="margin-top: 18px; max-width: 850px;">
+                <div class="card" style="border-left: 3px solid var(--danger);">
+                    <span class="icon">⚠️</span>
+                    <h4>O Erro Comum</h4>
+                    <p>Usar IA para fazer <strong>as mesmas tarefas do mesmo jeito</strong>, só um pouco mais rápido. Prompts genéricos. Resultados medianos.</p>
+                </div>
+                <div class="card" style="border-left: 3px solid var(--success);">
+                    <span class="icon">💡</span>
+                    <h4>A Revolução Real</h4>
+                    <p>Reimaginar <strong>como</strong> o trabalho é feito. Criar <strong>agentes</strong> que não apenas respondem, mas <strong>agendam, analisam, decidem e executam</strong>.</p>
+                </div>
+            </div>
+            <p style="margin-top: 14px; font-style: italic; color: var(--text-muted); font-size: 0.9rem;">"A produtividade só decolou quando as fábricas redesenharam seus processos em torno da eletricidade."</p>
+        </div>
+
+        <!-- SLIDE 4: ASSISTENTE VS AGENTE -->
+        <div class="slide">
+            <div class="tag">Conceito Fundamental</div>
+            <h2>Assistente vs. Agente de IA</h2>
+            <p>A diferença que separa quem <strong>usa</strong> IA de quem <strong>multiplica</strong> resultados com IA.</p>
+            <table class="compare-table">
+                <tr>
+                    <th>Característica</th>
+                    <th class="col-copilot">🤖 Assistente (Copilot Básico)</th>
+                    <th class="col-agent">🧠 Agente (Copilot Avançado)</th>
+                </tr>
+                <tr>
+                    <td><strong>Interação</strong></td>
+                    <td class="col-copilot">Responde a comandos pontuais</td>
+                    <td class="col-agent">Atua de forma autônoma em fluxos</td>
+                </tr>
+                <tr>
+                    <td><strong>Memória</strong></td>
+                    <td class="col-copilot">Contexto da sessão atual</td>
+                    <td class="col-agent">Lembra preferências, histórico, dados</td>
+                </tr>
+                <tr>
+                    <td><strong>Ação</strong></td>
+                    <td class="col-copilot">Gera texto, análise, resumo</td>
+                    <td class="col-agent">Executa tarefas: agenda, envia, aprova</td>
+                </tr>
+                <tr>
+                    <td><strong>Integração</strong></td>
+                    <td class="col-copilot">Dentro de um app (Word, Excel...)</td>
+                    <td class="col-agent">Conecta múltiplos apps e sistemas</td>
+                </tr>
+                <tr>
+                    <td><strong>Exemplo</strong></td>
+                    <td class="col-copilot">"Resuma este e-mail"</td>
+                    <td class="col-agent">"Monitore meus e-mails de projeto e me alerte sobre atrasos"</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- SLIDE 5: O QUE SÃO AGENTES — EXEMPLOS CAIXA/GOVERNO -->
+        <div class="slide">
+            <div class="tag">Conceito</div>
+            <h2>O que são Agentes de IA?</h2>
+            <p>Agentes são <strong>especialistas digitais</strong> que combinam IA, dados e ações para realizar tarefas complexas de forma autônoma.</p>
+            <div class="agent-showcase">
+                <div class="agent-card" onclick="typePrompt(this, 0)">
+                    <span class="badge badge-copilot">Copilot</span>
+                    <h4>🏛️ Agente de Contratos</h4>
+                    <p>Analisa contratos de convênios, identifica cláusulas críticas e gera resumos executivos para aprovação.</p>
+                    <div class="prompt-box" id="prompt-0"></div>
+                </div>
+                <div class="agent-card" onclick="typePrompt(this, 1)">
+                    <span class="badge badge-agent">Agente Customizado</span>
+                    <h4>📋 Agente de Relatórios</h4>
+                    <p>Compila dados de órgãos parceiros, gera relatórios de gestão fiscal e alerta sobre inconsistências.</p>
+                    <div class="prompt-box" id="prompt-1"></div>
+                </div>
+                <div class="agent-card" onclick="typePrompt(this, 2)">
+                    <span class="badge badge-agent">Agente Customizado</span>
+                    <h4>🏗️ Agente de Obras</h4>
+                    <p>Monitora cronogramas de obras públicas, identifica atrasos e gera alertas para engenheiros responsáveis.</p>
+                    <div class="prompt-box" id="prompt-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 6: 5 NÍVEIS DE MATURIDADE — TOGGLE INDIVIDUAL -->
+        <div class="slide">
+            <div class="tag">Framework</div>
+            <h2>Os 5 Níveis de Maturidade em IA</h2>
+            <p>Em qual nível <strong>VOCÊ</strong> está hoje? Clique nos níveis para explorar.</p>
+            <div class="maturity-track">
+                <div class="maturity-step" onclick="toggleStep(this)">
+                    <div class="step-num">1</div>
+                    <h4>Curioso</h4>
+                    <p class="step-desc">Experimenta prompts básicos ocasionalmente. Ainda descobrindo o que a IA pode fazer.</p>
+                </div>
+                <div class="maturity-step" onclick="toggleStep(this)">
+                    <div class="step-num">2</div>
+                    <h4>Usuário</h4>
+                    <p class="step-desc">Usa IA semanalmente em tarefas rotineiras. Conhece os comandos básicos do Copilot.</p>
+                </div>
+                <div class="maturity-step" onclick="toggleStep(this)">
+                    <div class="step-num">3</div>
+                    <h4>Adepto</h4>
+                    <p class="step-desc">Domina prompts avançados e contexto. Sabe extrair o máximo do Copilot nos apps.</p>
+                </div>
+                <div class="maturity-step" onclick="toggleStep(this)">
+                    <div class="step-num">4</div>
+                    <h4>Estrategista</h4>
+                    <p class="step-desc">Integra IA em fluxos de trabalho. Conecta dados entre Excel, Outlook e Teams.</p>
+                </div>
+                <div class="maturity-step" onclick="toggleStep(this)">
+                    <div class="step-num">5</div>
+                    <h4>Arquiteto</h4>
+                    <p class="step-desc">Cria agentes e automações customizadas. Redesenha processos com IA.</p>
+                </div>
+            </div>
+            <p style="margin-top: 14px; font-size: 0.9rem;">💡 <strong>Meta desta sessão:</strong> levar todos do Nível 2–3 para o Nível 4–5.</p>
+        </div>
+
+        <!-- SLIDE 7: ENQUETE MATURIDADE — COMPACTADA -->
+        <div class="slide">
+            <div class="tag">Enquete ao Vivo — Parte 1/2</div>
+            <h2>📊 Qual o seu nível de maturidade?</h2>
+            <p>Escaneie o QR Code com seu celular e vote!</p>
+            <div class="qr-wrap">
+                <div class="qr-img"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAeAAAAHgCAIAAADytinCAAAKyElEQVR4nO3dQW4rNxQF0Sjw/rfsTH+AgPgJQ79i9zlzS21ZLnBywc/39/cfAPT8Of0AAPwzgQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAqK+pN/58PlNvfcj39/ehV15/Vuv3bX7OO8+88zlPvfLauW/O2rlnbn7rdkz9jZygAaIEGiBKoAGiBBogSqABogQaIEqgAaIEGiBKoAGixpaEa1O7nbWpfdS5T+Pcoq+5Umvu387tG9em/sv8d/8+J2iAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogKjoknDt3Obnxtvhztn5NJr3+zW/OTtPdeP9jTvvu6O5YFxzggaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiLpySfg8U7fw7WjepHfuHsUbV6bN34jf5wQNECXQAFECDRAl0ABRAg0QJdAAUQINECXQAFECDRBlSch/1LzvrnlX3vqppraRa3aGBU7QAFECDRAl0ABRAg0QJdAAUQINECXQAFECDRAl0ABRVy4J37ZxOrcWm7rB79xv1HTus9rR3Bm+7b97zQkaIEqgAaIEGiBKoAGiBBogSqABogQaIEqgAaIEGiAquiS0JXvzz641n/ltP7vjef/d5zhBA0QJNECUQANECTRAlEADRAk0QJRAA0QJNECUQANEfdwA1je1vJr6bjQXbjvve+72v6ln1o2f4QQNECXQAFECDRAl0ABRAg0QJdAAUQINECXQAFECDRBlSfgv3Litaq7y1po36a2duxtwzVbw2ZygAaIEGiBKoAGiBBogSqABogQaIEqgAaIEGiBKoAGivqbe+G0Lt51XXtt533P7t+YO7ca/ke/GmzlBA0QJNECUQANECTRAlEADRAk0QJRAA0QJNECUQANERe8kbC6Rzj1V8wa/qd/3eX/fc++7883Z0fw0bnzfNSdogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaICosTsJ16Zu/2tu59Y/O7VDu/F2x7fd0Te1bt155ea2eYoTNECUQANECTRAlEADRAk0QJRAA0QJNECUQANECTRAVHRJuDZ1S1tzWzV1K92UqTsY1278KzTv2ORXTtAAUQINECXQAFECDRAl0ABRAg0QJdAAUQINECXQAFGfqRvApu4la96H1vw01pp3xzV/o6ll3dQtmjuvvGPqrstznKABogQaIEqgAaIEGiBKoAGiBBogSqABogQaIEqgAaKiS8K1G+/om9p0NZeTa1Pfjakd2o07w7Wpb+zz/lOcoAGiBBogSqABogQaIEqgAaIEGiBKoAGiBBogSqABor6mH+D/17yXrHkfWnOz19w37vy+zYXb1K5yR3Pvd44TNECUQANECTRAlEADRAk0QJRAA0QJNECUQANECTRA1NidhGvNewXXpnaGa81756Zeeed915r3GTZvHL1x6+tOQgD+RqABogQaIEqgAaIEGiBKoAGiBBogSqABogQaIOp1dxKuNe+OW2vustZ2nqq5Mj33VFOLzbXnbfaanKABogQaIEqgAaIEGiBKoAGiBBogSqABogQaIEqgAaIeeCfhub3f1IatuWBsetvubkfzqc658X/BCRogSqABogQaIEqgAaIEGiBKoAGiBBogSqABogQaIOrKOwmnFkFTy6tzP3vj6vLGv/5a8yZMT1XgBA0QJdAAUQINECXQAFECDRAl0ABRAg0QJdAAUQINEDW2JGyu1NZ2nrm5ntpx419h6q7Lc6984/eqeW9kkxM0QJRAA0QJNECUQANECTRAlEADRAk0QJRAA0QJNEDU2JKweXtYc6W2duOmq/nX3/G87eva1G2Wzc/5HCdogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaICosSXhOc+7hW9q0bfzyjvOLc12Xrm5Upv6tp+7gfOc5lOtOUEDRAk0QJRAA0QJNECUQANECTRAlEADRAk0QJRAA0SNLQnP3aS3duNteM2bA89pbkHP3YY39fe98QbOc5r/C07QAFECDRAl0ABRAg0QJdAAUQINECXQAFECDRAl0ABRD7yTcGfz01xPnVs/Nu8V3HnlHVPPfO4uxBs3ezs/e+NOeM0JGiBKoAGiBBogSqABogQaIEqgAaIEGiBKoAGiBBogamxJOLVw29HcGq01d4ZrN37OazeuEHecu0dx52dv/F45QQNECTRAlEADRAk0QJRAA0QJNECUQANECTRAlEADRI0tCc9tnN62npp63x03PvPauZWa78av3rYzdIIGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBoj6TO1n3JX3M86tp879FZqfc/P3nVrHTe0b15pPtcMJGiBKoAGiBBogSqABogQaIEqgAaIEGiBKoAGiBBogamxJuOPG9dSO5m2HzbsB15rf9rdtFM+tiM99Y6e+OU7QAFECDRAl0ABRAg0QJdAAUQINECXQAFECDRAl0ABRV95J+Lb3bf7sOc3l5Ln3Pae5JDznxq3gmhM0QJRAA0QJNECUQANECTRAlEADRAk0QJRAA0QJNEDU1/QD/LQbt1Xn9n5Tt+Gt37d5R9+N77vWXNWec25ze44TNECUQANECTRAlEADRAk0QJRAA0QJNECUQANECTRA1NiS8Mad0s4zT62Ypm4sbK7F1qaeuflZNVemU688xQkaIEqgAaIEGiBKoAGiBBogSqABogQaIEqgAaIEGiDq07wt7W3etp6a2vs1N2w33pXX/Kx2ND9nJ2iAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogKixOwmbC7cdzU3XjTvD5qZrR3P/duOtg1O3d05xggaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBpbEq41Vz1Tu7udXVbzmXecuw1v52ebT7Xzs1M7w7XmCvEcJ2iAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogKjoknCtuXGaet+dPVhzPbU2tau88f7GtbfdlLjW/E9xggaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiLpyScjva24Fm1vQc6u85grxnKllbHMNuMMJGiBKoAGiBBogSqABogQaIEqgAaIEGiBKoAGiBBogypIwoblha97QeG4tNvX7NneVO688dSfh8+7ndIIGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBoi6cknY3PxMmdpH7bzv1OJrauE25W2rvBv/RmtO0ABRAg0QJdAAUQINECXQAFECDRAl0ABRAg0QJdAAUdEl4fMWQW9z7i/Y3BnuuPHbPnXb4dq5pejUNtIJGiBKoAGiBBogSqABogQaIEqgAaIEGiBKoAGiBBog6uN+P4AmJ2iAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogKi/ABjTVA9i5tTUAAAAAElFTkSuQmCC" alt="QR"></div>
+                <div class="qr-text">
+                    <h3>📱 Como participar</h3>
+                    <p>1. Abra a câmera do celular</p>
+                    <p>2. Aponte para o QR Code</p>
+                    <p>3. Selecione seu nível de maturidade</p>
+                </div>
+            </div>
+            <div class="poll-box">
+                <div class="poll-item" onclick="voteMaturity(0)">
+                    <div class="poll-fill" id="mat-0" style="width:0%"></div>
+                    <span class="poll-label">🌱 Nível 1 — Curioso</span>
+                    <span class="poll-pct" id="mat-pct-0">0%</span>
+                </div>
+                <p class="poll-desc">Experimenta prompts básicos ocasionalmente</p>
+                <div class="poll-item" onclick="voteMaturity(1)">
+                    <div class="poll-fill teal" id="mat-1" style="width:0%"></div>
+                    <span class="poll-label">🛠️ Nível 2 — Usuário</span>
+                    <span class="poll-pct" id="mat-pct-1">0%</span>
+                </div>
+                <p class="poll-desc">Usa IA semanalmente em tarefas rotineiras</p>
+                <div class="poll-item" onclick="voteMaturity(2)">
+                    <div class="poll-fill orange" id="mat-2" style="width:0%"></div>
+                    <span class="poll-label">🎯 Nível 3 — Adepto</span>
+                    <span class="poll-pct" id="mat-pct-2">0%</span>
+                </div>
+                <p class="poll-desc">Domina prompts avançados e contexto</p>
+                <div class="poll-item" onclick="voteMaturity(3)">
+                    <div class="poll-fill purple" id="mat-3" style="width:0%"></div>
+                    <span class="poll-label">🧠 Nível 4 — Estrategista</span>
+                    <span class="poll-pct" id="mat-pct-3">0%</span>
+                </div>
+                <p class="poll-desc">Integra IA em fluxos de trabalho</p>
+                <div class="poll-item" onclick="voteMaturity(4)">
+                    <div class="poll-fill green" id="mat-4" style="width:0%"></div>
+                    <span class="poll-label">🚀 Nível 5 — Arquiteto</span>
+                    <span class="poll-pct" id="mat-pct-4">0%</span>
+                </div>
+                <p class="poll-desc">Cria agentes e automações customizadas</p>
+            </div>
+            <p style="margin-top:8px; font-size:0.85rem;">Total de votos: <strong id="mat-total">0</strong></p>
+        </div>
+
+        <!-- SLIDE 8: JOGO DRAG & DROP -->
+        <div class="slide">
+            <div class="tag">Jogo Interativo</div>
+            <h2>🎮 Assistente ou Agente?</h2>
+            <p>Arraste cada cenário para o quadro correto: <strong style="color:var(--ms-blue)">Assistente</strong> ou <strong style="color:var(--ms-purple)">Agente</strong>.</p>
+            <div class="sorter-game">
+                <div class="sorter-col assist" id="zone-assist" ondragover="allowDrop(event)" ondrop="drop(event, 'assist')" ondragleave="dragLeave(event)">
+                    <h4>🤖 Assistente</h4>
+                </div>
+                <div class="sorter-col agent" id="zone-agent" ondragover="allowDrop(event)" ondrop="drop(event, 'agent')" ondragleave="dragLeave(event)">
+                    <h4>🧠 Agente</h4>
+                </div>
+            </div>
+            <div class="sorter-pool" id="sorter-pool">
+                <div class="sorter-item" draggable="true" ondragstart="drag(event)" data-type="assist" id="s1">
+                    <span>📝</span> "Crie um resumo desta reunião do Teams"
+                </div>
+                <div class="sorter-item" draggable="true" ondragstart="drag(event)" data-type="agent" id="s2">
+                    <span>📅</span> "Monitore minha agenda e reagende conflitos automaticamente"
+                </div>
+                <div class="sorter-item" draggable="true" ondragstart="drag(event)" data-type="assist" id="s3">
+                    <span>📊</span> "Gere um gráfico com os dados desta planilha"
+                </div>
+                <div class="sorter-item" draggable="true" ondragstart="drag(event)" data-type="agent" id="s4">
+                    <span>🔔</span> "Acompanhe o pipeline de convênios e envie alerta se houver atraso"
+                </div>
+                <div class="sorter-item" draggable="true" ondragstart="drag(event)" data-type="agent" id="s5">
+                    <span>📧</span> "Leia e-mails de órgãos e aprove pagamentos dentro da política"
+                </div>
+            </div>
+            <button class="btn btn-sm" onclick="checkSorter()" id="btn-check">✓ Ver Respostas</button>
+            <button class="btn btn-sm btn-outline" onclick="resetSorter()" style="margin-left:6px;">↺ Recomeçar</button>
+            <p id="sorter-score" style="margin-top:8px; font-weight:600; min-height:20px;"></p>
+        </div>
+
+        <!-- SLIDE 9: TIMELINE REDESIGN -->
+        <div class="slide">
+            <div class="tag">Evolução</div>
+            <h2>A Jornada do Microsoft 365 Copilot</h2>
+            <p>De assistente pontual a ecossistema de agentes inteligentes.</p>
+            <div class="timeline-wrap">
+                <div class="timeline-bar"></div>
+                <div class="timeline-dots">
+                    <div class="tl-dot-wrap">
+                        <div class="tl-dot">📝</div>
+                        <h4>Copilot nos Apps</h4>
+                        <p>Word, Excel, PPT, Outlook, Teams. Assistência pontual.</p>
+                    </div>
+                    <div class="tl-dot-wrap">
+                        <div class="tl-dot">🌐</div>
+                        <h4>Copilot Web</h4>
+                        <p>Acesso universal via browser. Integração Bing/Edge.</p>
+                    </div>
+                    <div class="tl-dot-wrap">
+                        <div class="tl-dot">💼</div>
+                        <h4>Copilot M365</h4>
+                        <p>Dados da organização via Microsoft Graph.</p>
+                    </div>
+                    <div class="tl-dot-wrap">
+                        <div class="tl-dot">🧩</div>
+                        <h4>Agentes no Chat</h4>
+                        <p>Criação de agentes customizados no Teams.</p>
+                    </div>
+                    <div class="tl-dot-wrap">
+                        <div class="tl-dot">🤖</div>
+                        <h4>Agentes Autônomos</h4>
+                        <p>Agentes proativos, sem intervenção humana.</p>
+                    </div>
+                </div>
+            </div>
+            <p style="margin-top: 18px; font-size: 1rem;"><strong style="color:var(--ms-teal)">Hoje estamos aqui →</strong> Aprendendo a construir o Nível 4 e 5.</p>
+        </div>
+
+        <!-- SLIDE 10: EXEMPLO EXCEL — CAIXA/GOVERNO -->
+        <div class="slide">
+            <div class="tag">Exemplo Prático — Copilot no Excel</div>
+            <h2>📊 Do Assistente ao Agente: Gestão de Dados</h2>
+            <p>Veja como elevar uma simples análise de Excel para um <strong>agente de inteligência de negócios</strong>.</p>
+            <div class="card-grid" style="margin-top: 14px; max-width: 950px;">
+                <div class="card" style="border-top: 3px solid var(--ms-blue);">
+                    <span class="icon">🥉</span>
+                    <h4>Nível 2: Assistente Básico</h4>
+                    <p><em>"Resuma os dados desta planilha de convênios"</em></p>
+                    <p style="margin-top:5px; font-size:0.78rem;">→ Gera um resumo textual simples dos valores.</p>
+                </div>
+                <div class="card" style="border-top: 3px solid var(--ms-purple);">
+                    <span class="icon">🥈</span>
+                    <h4>Nível 3: Adepto Avançado</h4>
+                    <p><em>"Identifique convênios com execução abaixo de 70% e destaque os 5 maiores atrasos"</em></p>
+                    <p style="margin-top:5px; font-size:0.78rem;">→ Cria gráficos, destaca outliers e sugere hipóteses.</p>
+                </div>
+                <div class="card" style="border-top: 3px solid var(--ms-teal);">
+                    <span class="icon">🥇</span>
+                    <h4>Nível 4-5: Agente Estrategista</h4>
+                    <p><em>"Monitore semanalmente a execução orçamentária dos convênios. Se houver desvio >15%, crie um alerta no Teams e um relatório executivo para a superintendência."</em></p>
+                    <p style="margin-top:5px; font-size:0.78rem;">→ <strong>Autônomo:</strong> executa, alerta e comunica sem pedir permissão.</p>
+                </div>
+            </div>
+            <div class="prompt-box" style="margin-top:12px; max-width: 900px;">
+                <strong>💡 Prompt de Agente para Excel + Teams (Caixa):</strong><br>
+                "Crie um fluxo que, toda sexta-feira às 17h, analise a planilha 'Execucao_Convenios.xlsx', compare com o cronograma aprovado, gere um gráfico de variação e envie no canal 'Gestao-Convenios' do Teams com a tag @urgente se o desvio for maior que 10%."
+            </div>
+        </div>
+
+        <!-- SLIDE 11: EXEMPLO TEAMS — CAIXA/GOVERNO -->
+        <div class="slide">
+            <div class="tag">Exemplo Prático — Copilot no Teams</div>
+            <h2>💬 Agente de Reuniões Inteligente</h2>
+            <p>Transforme o Copilot no Teams em um <strong>secretário executivo digital</strong> para gestão de convênios e obras.</p>
+            <div class="agent-showcase" style="grid-template-columns: 1fr 1fr;">
+                <div class="agent-card">
+                    <span class="badge badge-copilot">Durante a Reunião</span>
+                    <h4>🎙️ Transcrição Inteligente</h4>
+                    <p>O Copilot identifica quem falou, resume pontos-chave em tempo real e sugere próximos passos para engenheiros e gestores.</p>
+                    <div class="prompt-box">"Liste todos os action items atribuídos à equipe de obras nesta reunião"</div>
+                </div>
+                <div class="agent-card">
+                    <span class="badge badge-agent">Após a Reunião</span>
+                    <h4>📋 Follow-up Automático</h4>
+                    <p>Cria resumo estruturado, tarefas no Planner e envia e-mail de follow-up para todos os órgãos parceiros.</p>
+                    <div class="prompt-box">"Gere um resumo executivo e crie tarefas no Planner para cada entregável do convênio"</div>
+                </div>
+            </div>
+            <div class="card" style="margin-top: 12px; max-width: 900px; text-align: left; padding: 14px 18px;">
+                <h4 style="color:var(--ms-teal); margin-bottom:6px; font-size:0.9rem;">🚀 Cenário Avançado: Agente de Acompanhamento de Obras</h4>
+                <p style="font-size:0.82rem;">Configure um agente no chat do Copilot que:</p>
+                <p style="font-size:0.78rem; margin-top:3px;">1. Monitora o canal do projeto no Teams</p>
+                <p style="font-size:0.78rem;">2. Detecta menções a prazos de entrega ou bloqueios de repasse</p>
+                <p style="font-size:0.78rem;">3. Atualiza automaticamente o status no SharePoint de gestão</p>
+                <p style="font-size:0.78rem;">4. Alerta o gestor apenas quando há risco real de atraso no convênio</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 12: AGENTES NO CHAT DO COPILOT — SUBSTITUI COPILOT STUDIO -->
+        <div class="slide">
+            <div class="tag">Criação de Agentes — Chat do Copilot</div>
+            <h2>🛠️ Criando Agentes no Chat do Copilot</h2>
+            <p>Você não precisa ser programador. Diretamente no <strong>chat do Copilot no Teams</strong>, é possível criar agentes personalizados para suas necessidades.</p>
+            <div class="card-grid" style="margin-top: 14px; max-width: 950px;">
+                <div class="card">
+                    <span class="icon">1️⃣</span>
+                    <h4>Acesse o Chat do Copilot</h4>
+                    <p>No Teams, abra o chat do Copilot (ícone no topo à esquerda) ou acesse copilot.microsoft.com. Clique em <strong>"Criar um agente"</strong> ou explore os agentes disponíveis.</p>
+                </div>
+                <div class="card">
+                    <span class="icon">2️⃣</span>
+                    <h4>Defina o Propósito</h4>
+                    <p>Descreva em linguagem natural o que o agente deve fazer. Ex: <em>"Você é um especialista em convênios da CAIXA. Analise documentos, identifique riscos e sugira próximos passos."</em></p>
+                </div>
+                <div class="card">
+                    <span class="icon">3️⃣</span>
+                    <h4>Adicione Conhecimento</h4>
+                    <p>Anexe documentos de referência: manuais de convênios, normativas do MDR, modelos de contratos. O agente usará esses arquivos como base de conhecimento.</p>
+                </div>
+                <div class="card">
+                    <span class="icon">4️⃣</span>
+                    <h4>Publique e Compartilhe</h4>
+                    <p>Salve o agente com um nome (ex: "Especialista em Convênios") e compartilhe o link no Teams para que colegas da área de Governo também possam usar.</p>
+                </div>
+            </div>
+            <div class="prompt-box" style="margin-top:12px; max-width: 950px;">
+                <strong>🎯 Exemplo real de Agente no Chat do Copilot (Caixa/Governo):</strong><br>
+                Nome: <em>"Assistente de Compliance de Convênios"</em><br>
+                Instruções: "Você é um especialista em gestão de convênios da CAIXA. Analise documentos de repasse, identifique inconsistências entre cronograma e execução, verifique se há aditivos pendentes e sugira ações corretivas. Sempre cite a normativa aplicável."<br>
+                Conhecimento: Manual de Convênios CAIXA, Portarias do MDR, Checklist de Documentação<br>
+                Compartilhamento: Link no Teams para gestores de convênios
+            </div>
+        </div>
+
+        <!-- SLIDE 13: OUTLOOK — CAIXA/GOVERNO -->
+        <div class="slide">
+            <div class="tag">Exemplo Prático — Copilot no Outlook</div>
+            <h2>📧 Agente de Comunicação Interinstitucional</h2>
+            <p>Vá além de "resumir e-mails". Crie um agente que <strong>gerencia a comunicação com órgãos parceiros</strong> como um assessor jurídico digital.</p>
+            <div class="agent-showcase" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="agent-card">
+                    <span class="badge badge-copilot">Nível 3</span>
+                    <h4>📝 Resumo Contextual</h4>
+                    <p>"Resuma os 10 e-mails mais importantes desta manhã dos órgãos parceiros e me diga quais precisam de resposta hoje."</p>
+                    <div class="prompt-box">Copilot analisa prioridade, remetente (MDR, prefeituras) e urgência.</div>
+                </div>
+                <div class="agent-card">
+                    <span class="badge badge-agent">Nível 4</span>
+                    <h4>⚡ Respostas Inteligentes</h4>
+                    <p>"Para e-mails de prefeituras sobre liberação de repasse, verifique se o valor está dentro do cronograma aprovado e aprove ou solicite revisão."</p>
+                    <div class="prompt-box">Integra com Excel/SharePoint de cronogramas para validação automática.</div>
+                </div>
+                <div class="agent-card">
+                    <span class="badge badge-agent">Nível 5</span>
+                    <h4>🤖 Agente de Priorização</h4>
+                    <p>Configure um agente que classifica e-mails por prioridade (repasse, aditivo, fiscalização), bloqueia spams sofisticados e agenda reuniões com órgãos direto da caixa de entrada.</p>
+                    <div class="prompt-box">"Agende reuniões de 30min sempre que um gestor municipal solicitar 'reunião de alinhamento'"</div>
+                </div>
+                <div class="agent-card">
+                    <span class="badge badge-copilot">Dica Pro</span>
+                    <h4>💡 Prompts que Salvam Horas</h4>
+                    <p>"Crie um rascunho de resposta formal ao Ministério recusando este aditivo por extrapolar o cronograma, mantendo a porta aberta para renegociação."</p>
+                    <div class="prompt-box">Copilot mantém o tom institucional da CAIXA.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 14: WORD + POWERPOINT — CAIXA/GOVERNO -->
+        <div class="slide">
+            <div class="tag">Exemplo Prático — Word & PowerPoint</div>
+            <h2>📝📽️ Documentos e Apresentações para Gestão Pública</h2>
+            <p>Use o Copilot para transformar <strong>dados brutos de convênios em narrativas persuasivas</strong> — automaticamente.</p>
+            <div class="card-grid" style="margin-top: 14px; max-width: 950px;">
+                <div class="card">
+                    <span class="icon">📄</span>
+                    <h4>Word: Relatório de Execução</h4>
+                    <p><em>"A partir dos dados do Excel 'Execucao_Convenios_Q3.xlsx', gere um relatório executivo em Word com análise de riscos, gargalos e recomendações para a superintendência."</em></p>
+                    <p style="margin-top:6px; font-size:0.78rem; color:var(--ms-teal);">→ O agente cruza dados, gera insights e formata o documento no padrão CAIXA.</p>
+                </div>
+                <div class="card">
+                    <span class="icon">📊</span>
+                    <h4>PowerPoint: Apresentação para Órgãos</h4>
+                    <p><em>"Transforme este relatório de execução de 20 páginas em uma apresentação executiva de 10 slides para reunião com o MDR, com storytelling de dados e cronograma visual."</em></p>
+                    <p style="margin-top:6px; font-size:0.78rem; color:var(--ms-teal);">→ Gera slides, sugere gráficos e cria notas do apresentador.</p>
+                </div>
+                <div class="card">
+                    <span class="icon">🔄</span>
+                    <h4>Fluxo Completo: Dados → Decisão</h4>
+                    <p><strong>Agente:</strong> Toda segunda, analise execução de convênios → gere relatório Word → crie PPT executivo → envie para superintendência → agende reunião de review com órgão parceiro.</p>
+                    <p style="margin-top:6px; font-size:0.78rem; color:var(--ms-purple);">→ <strong>100% autônomo.</strong> Você só aprova.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 15: METÁFORA DA ELETRICIDADE -->
+        <div class="slide">
+            <div class="tag">Reflexão</div>
+            <h2>⚡ A Metáfora da Eletricidade</h2>
+            <p style="max-width: 800px; font-size: 1rem;">Assim como a eletricidade só revolucionou as fábricas quando os processos foram <strong>redesenhados</strong>, a IA só transformará seu trabalho quando você parar de "substituir motores" e começar a "reimaginar fábricas".</p>
+            <div class="card-grid" style="margin-top: 16px; max-width: 800px;">
+                <div class="card" style="opacity:0.7;">
+                    <span class="icon">🏭</span>
+                    <h4>Fábrica a Vapor</h4>
+                    <p>Motor central. Tudo gira em torno de um ponto. Limitado, rígido, ineficiente.</p>
+                    <p style="margin-top:5px; color:var(--danger); font-size:0.78rem;"><strong>= PowerPoint estático, planilhas manuais, e-mails sem fim</strong></p>
+                </div>
+                <div class="card" style="border: 1px solid var(--ms-teal);">
+                    <span class="icon">⚡</span>
+                    <h4>Fábrica Elétrica</h4>
+                    <p>Energia distribuída. Tomadas em qualquer lugar. Linhas de produção flexíveis.</p>
+                    <p style="margin-top:5px; color:var(--success); font-size:0.78rem;"><strong>= Agentes autônomos, dados conectados, decisões em tempo real</strong></p>
+                </div>
+            </div>
+            <p style="margin-top: 18px; font-size: 1.1rem; font-weight: 700; background: linear-gradient(90deg, var(--ms-blue), var(--ms-teal)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                A pergunta não é "O que a IA pode fazer pelo meu PowerPoint?"<br>
+                Mas sim: "Como a IA redesenha a forma como afeta o meu trabalho?"
+            </p>
+        </div>
+
+        <!-- SLIDE 16: ENQUETE FUTURO -->
+        <div class="slide">
+            <div class="tag">Enquete ao Vivo — Parte 2/2</div>
+            <h2>🔮 Como você vê o futuro do trabalho com IA?</h2>
+            <p>Vamos comparar com a primeira enquete. Sua percepção mudou ao longo desta sessão?</p>
+            <div class="qr-wrap">
+                <div class="qr-img"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAeAAAAHgCAIAAADytinCAAAKyElEQVR4nO3dQW4rNxQF0Sjw/rfsTH+AgPgJQ79i9zlzS21ZLnBywc/39/cfAPT8Of0AAPwzgQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAqK+pN/58PlNvfcj39/ehV15/Vuv3bX7OO8+88zlPvfLauW/O2rlnbn7rdkz9jZygAaIEGiBKoAGiBBogSqABogQaIEqgAaIEGiBKoAGixpaEa1O7nbWpfdS5T+Pcoq+5Umvu387tG9em/sv8d/8+J2iAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogKjoknDt3Obnxtvhztn5NJr3+zW/OTtPdeP9jTvvu6O5YFxzggaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiLpySfg8U7fw7WjepHfuHsUbV6bN34jf5wQNECXQAFECDRAl0ABRAg0QJdAAUQINECXQAFECDRBlSch/1LzvrnlX3vqppraRa3aGBU7QAFECDRAl0ABRAg0QJdAAUQINECXQAFECDRAl0ABRVy4J37ZxOrcWm7rB79xv1HTus9rR3Bm+7b97zQkaIEqgAaIEGiBKoAGiBBogSqABogQaIEqgAaIEGiAquiS0JXvzz641n/ltP7vjef/d5zhBA0QJNECUQANECTRAlEADRAk0QJRAA0QJNECUQANEfdwA1je1vJr6bjQXbjvve+72v6ln1o2f4QQNECXQAFECDRAl0ABRAg0QJdAAUQINECXQAFECDRBlSfgv3Litaq7y1po36a2duxtwzVbw2ZygAaIEGiBKoAGiBBogSqABogQaIEqgAaIEGiBKoAGivqbe+G0Lt51XXtt533P7t+YO7ca/ke/GmzlBA0QJNECUQANECTRAlEADRAk0QJRAA0QJNECUQANERe8kbC6Rzj1V8wa/qd/3eX/fc++7883Z0fw0bnzfNSdogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaICosTsJ16Zu/2tu59Y/O7VDu/F2x7fd0Te1bt155ea2eYoTNECUQANECTRAlEADRAk0QJRAA0QJNECUQANECTRAVHRJuDZ1S1tzWzV1K92UqTsY1278KzTv2ORXTtAAUQINECXQAFECDRAl0ABRAg0QJdAAUQINECXQAFGfqRvApu4la96H1vw01pp3xzV/o6ll3dQtmjuvvGPqrstznKABogQaIEqgAaIEGiBKoAGiBBogSqABogQaIEqgAaKiS8K1G+/om9p0NZeTa1Pfjakd2o07w7Wpb+zz/lOcoAGiBBogSqABogQaIEqgAaIEGiBKoAGiBBogSqABor6mH+D/17yXrHkfWnOz19w37vy+zYXb1K5yR3Pvd44TNECUQANECTRAlEADRAk0QJRAA0QJNECUQANECTRA1NidhGvNewXXpnaGa81756Zeeed915r3GTZvHL1x6+tOQgD+RqABogQaIEqgAaIEGiBKoAGiBBogSqABogQaIOp1dxKuNe+OW2vustZ2nqq5Mj33VFOLzbXnbfaanKABogQaIEqgAaIEGiBKoAGiBBogSqABogQaIEqgAaIeeCfhub3f1IatuWBsetvubkfzqc658X/BCRogSqABogQaIEqgAaIEGiBKoAGiBBogSqABogQaIOrKOwmnFkFTy6tzP3vj6vLGv/5a8yZMT1XgBA0QJdAAUQINECXQAFECDRAl0ABRAg0QJdAAUQINEDW2JGyu1NZ2nrm5ntpx419h6q7Lc6984/eqeW9kkxM0QJRAA0QJNECUQANECTRAlEADRAk0QJRAA0QJNEDU2JKweXtYc6W2duOmq/nX3/G87eva1G2Wzc/5HCdogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaICosSXhOc+7hW9q0bfzyjvOLc12Xrm5Upv6tp+7gfOc5lOtOUEDRAk0QJRAA0QJNECUQANECTRAlEADRAk0QJRAA0SNLQnP3aS3duNteM2bA89pbkHP3YY39fe98QbOc5r/C07QAFECDRAl0ABRAg0QJdAAUQINECXQAFECDRAl0ABRD7yTcGfz01xPnVs/Nu8V3HnlHVPPfO4uxBs3ezs/e+NOeM0JGiBKoAGiBBogSqABogQaIEqgAaIEGiBKoAGiBBogamxJOLVw29HcGq01d4ZrN37OazeuEHecu0dx52dv/F45QQNECTRAlEADRAk0QJRAA0QJNECUQANECTRAlEADRI0tCc9tnN62npp63x03PvPauZWa78av3rYzdIIGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBoj6TO1n3JX3M86tp879FZqfc/P3nVrHTe0b15pPtcMJGiBKoAGiBBogSqABogQaIEqgAaIEGiBKoAGiBBogamxJuOPG9dSO5m2HzbsB15rf9rdtFM+tiM99Y6e+OU7QAFECDRAl0ABRAg0QJdAAUQINECXQAFECDRAl0ABRV95J+Lb3bf7sOc3l5Ln3Pae5JDznxq3gmhM0QJRAA0QJNECUQANECTRAlEADRAk0QJRAA0QJNEDU1/QD/LQbt1Xn9n5Tt+Gt37d5R9+N77vWXNWec25ze44TNECUQANECTRAlEADRAk0QJRAA0QJNECUQANECTRA1NiS8Mad0s4zT62Ypm4sbK7F1qaeuflZNVemU688xQkaIEqgAaIEGiBKoAGiBBogSqABogQaIEqgAaIEGiDq07wt7W3etp6a2vs1N2w33pXX/Kx2ND9nJ2iAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogKixOwmbC7cdzU3XjTvD5qZrR3P/duOtg1O3d05xggaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBpbEq41Vz1Tu7udXVbzmXecuw1v52ebT7Xzs1M7w7XmCvEcJ2iAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogKjoknCtuXGaet+dPVhzPbU2tau88f7GtbfdlLjW/E9xggaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiLpyScjva24Fm1vQc6u85grxnKllbHMNuMMJGiBKoAGiBBogSqABogQaIEqgAaIEGiBKoAGiBBogypIwoblha97QeG4tNvX7NneVO688dSfh8+7ndIIGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBoi6cknY3PxMmdpH7bzv1OJrauE25W2rvBv/RmtO0ABRAg0QJdAAUQINECXQAFECDRAl0ABRAg0QJdAAUdEl4fMWQW9z7i/Y3BnuuPHbPnXb4dq5pejUNtIJGiBKoAGiBBogSqABogQaIEqgAaIEGiBKoAGiBBog6uN+P4AmJ2iAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogCiBBogSaIAogQaIEmiAKIEGiBJogKi/ABjTVA9i5tTUAAAAAElFTkSuQmCC" alt="QR"></div>
+                <div class="qr-text">
+                    <h3>📱 Participe da Enquete Final</h3>
+                    <p>Escaneie o QR Code com seu celular</p>
+                    <p>Ou vote clicando nas opções abaixo</p>
+                </div>
+            </div>
+            <div class="poll-box">
+                <div class="poll-item" onclick="voteFuture(0)">
+                    <div class="poll-fill" id="fut-0" style="width:0%"></div>
+                    <span class="poll-label">🤖 IA substituirá muitas funções</span>
+                    <span class="poll-pct" id="fut-pct-0">0%</span>
+                </div>
+                <div class="poll-item" onclick="voteFuture(1)">
+                    <div class="poll-fill teal" id="fut-1" style="width:0%"></div>
+                    <span class="poll-label">🤝 IA amplificará capacidades humanas</span>
+                    <span class="poll-pct" id="fut-pct-1">0%</span>
+                </div>
+                <div class="poll-item" onclick="voteFuture(2)">
+                    <div class="poll-fill orange" id="fut-2" style="width:0%"></div>
+                    <span class="poll-label">⚖️ Depende de como regulamentarmos</span>
+                    <span class="poll-pct" id="fut-pct-2">0%</span>
+                </div>
+                <div class="poll-item" onclick="voteFuture(3)">
+                    <div class="poll-fill purple" id="fut-3" style="width:0%"></div>
+                    <span class="poll-label">🚀 Vai criar profissões que nem imaginamos</span>
+                    <span class="poll-pct" id="fut-pct-3">0%</span>
+                </div>
+            </div>
+            <p style="margin-top:8px; font-size:0.85rem;">Total de votos: <strong id="fut-total">0</strong></p>
+        </div>
+
+        <!-- SLIDE 17: CALL TO ACTION — SEM BOTÃO RECOMEÇAR -->
+        <div class="slide">
+            <div class="tag">Próximos Passos</div>
+            <h2>🎯 Nossa Jornada Continua</h2>
+            <p>O conhecimento de hoje só vale se for aplicado. Aqui estão 3 ações concretas para esta semana:</p>
+            <div class="card-grid" style="margin-top: 16px; max-width: 900px;">
+                <div class="card" style="text-align:center;">
+                    <span class="icon">📅</span>
+                    <h4>1. Agende um "Copilot Hour"</h4>
+                    <p>Bloco de 1h semanal para experimentar um novo recurso do Copilot em conjunto.</p>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <span class="icon">🧪</span>
+                    <h4>2. Crie um Agente de Teste</h4>
+                    <p>Use o chat do Copilot para criar um agente simples (FAQ de convênios ou onboarding) e compartilhe no Teams.</p>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <span class="icon">📚</span>
+                    <h4>3. Documente & Compartilhe</h4>
+                    <p>Crie um canal no Teams chamado "IA na Prática" para compartilhar prompts e resultados com a equipe.</p>
+                </div>
+            </div>
+            <div style="margin-top: 16px; padding: 12px 24px; background: rgba(0,120,212,0.08); border-radius: 12px; border: 1px solid rgba(0,120,212,0.2); max-width: 700px;">
+                <p style="font-size: 0.95rem; color: var(--text);">💬 <strong>Desafio da Semana:</strong></p>
+                <p style="font-size: 0.85rem; margin-top: 5px;">Identifique <strong>uma tarefa repetitiva</strong> na sua rotina de gestão de convênios ou obras e crie um prompt ou agente no Copilot para automatizá-la parcialmente. Compartilhe o resultado no canal da equipe.</p>
+            </div>
+        </div>
+
+        <!-- SLIDE 18: ENCERRAMENTO — ATÉ A PRÓXIMA -->
+        <div class="slide">
+            <div class="tag">Obrigado</div>
+            <h1>Até a próxima!</h1>
+            <p class="subtitle">Microsoft 365 Copilot — Além do Básico</p>
+            <p style="max-width: 600px;">A revolução da IA não está em fazer as mesmas coisas mais rápido. Está em <strong>reimaginar o possível</strong>.</p>
+            <div style="margin-top: 22px; display: flex; gap: 14px; justify-content: center;">
+                <div style="text-align:center;">
+                    <div style="font-size: 2rem; margin-bottom: 5px;">🤖</div>
+                    <p style="font-size:0.8rem;">Assistente</p>
+                </div>
+                <div style="font-size: 1.4rem; color:var(--text-muted); display:flex; align-items:center;">→</div>
+                <div style="text-align:center;">
+                    <div style="font-size: 2rem; margin-bottom: 5px;">🧠</div>
+                    <p style="font-size:0.8rem;">Agente</p>
+                </div>
+                <div style="font-size: 1.4rem; color:var(--text-muted); display:flex; align-items:center;">→</div>
+                <div style="text-align:center;">
+                    <div style="font-size: 2rem; margin-bottom: 5px;">⚡</div>
+                    <p style="font-size:0.8rem;">Transformação</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLIDE 19: VÍDEO REAL -->
+        <div class="slide">
+            <div class="tag">Inspire-se</div>
+            <h2>🎬 O Futuro do Trabalho com IA</h2>
+            <div class="video-container">
+                <video controls autoplay muted loop style="max-width:100%; max-height:65vh; border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+                    <source src="video.mp4" type="video/mp4">
+                    Seu navegador não suporta vídeo HTML5.
+                </video>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-bar">
+        <span>← <kbd>←</kbd></span>
+        <span style="color:var(--border);">|</span>
+        <span><kbd>→</kbd> Próximo</span>
+        <span style="color:var(--border);">|</span>
+        <span><kbd>Esc</kbd> Sair</span>
+        <span style="color:var(--border);">|</span>
+        <span><kbd>2×Click</kbd> Tela Cheia</span>
+    </div>
+
+    <script>
+        // ===== NAVEGAÇÃO =====
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const totalSlides = slides.length;
+        document.getElementById('tot').textContent = totalSlides;
+
+        function updateSlide() {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active', 'prev');
+                if (i === currentSlide) {
+                    slide.classList.add('active');
+                    slide.querySelectorAll('.card, .agent-card').forEach((el, idx) => {
+                        el.style.opacity = '0'; el.style.transform = 'translateY(12px)';
+                        setTimeout(() => {
+                            el.style.transition = 'all 0.4s ease-out';
+                            el.style.opacity = '1'; el.style.transform = 'translateY(0)';
+                        }, 60 + idx * 50);
+                    });
+                } else if (i < currentSlide) slide.classList.add('prev');
+            });
+            document.getElementById('curr').textContent = currentSlide + 1;
+            document.getElementById('progress').style.width = ((currentSlide + 1) / totalSlides * 100) + '%';
+        }
+        function nextSlide() { if (currentSlide < totalSlides - 1) { currentSlide++; updateSlide(); } }
+        function prevSlide() { if (currentSlide > 0) { currentSlide--; updateSlide(); } }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextSlide(); }
+            if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevSlide(); }
+            if (e.key === 'Escape' && document.fullscreenElement) document.exitFullscreen();
+        });
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('button') || e.target.closest('.poll-item') || e.target.closest('.agent-card') || e.target.closest('.maturity-step') || e.target.closest('.sorter-item') || e.target.closest('video')) return;
+            const x = e.clientX, w = window.innerWidth;
+            if (x > w * 0.88) nextSlide(); else if (x < w * 0.12) prevSlide();
+        });
+        document.addEventListener('dblclick', () => {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
+        });
+
+        // ===== PARTICLES =====
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const colors = ['#0078D4','#8764B8','#00B294','#FF8C00'];
+            for (let i = 0; i < 20; i++) {
+                const p = document.createElement('div'); p.className = 'particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDelay = Math.random() * 20 + 's';
+                p.style.animationDuration = (12 + Math.random() * 15) + 's';
+                p.style.background = colors[Math.floor(Math.random() * colors.length)];
+                p.style.width = (2 + Math.random() * 3) + 'px';
+                p.style.height = p.style.width;
+                container.appendChild(p);
+            }
+        }
+        createParticles();
+
+        // ===== MATURITY TOGGLE — INDIVIDUAL =====
+        function toggleStep(el) {
+            el.classList.toggle('active');
+        }
+
+        // ===== ENQUETE MATURIDADE =====
+        let matVotes = JSON.parse(localStorage.getItem('matVotes') || '[0,0,0,0,0]');
+        let matVoted = false;
+        function updateMatPoll() {
+            const total = matVotes.reduce((a,b) => a+b, 0);
+            document.getElementById('mat-total').textContent = total;
+            matVotes.forEach((v, i) => {
+                const pct = total > 0 ? Math.round((v/total)*100) : 0;
+                document.getElementById('mat-' + i).style.width = pct + '%';
+                document.getElementById('mat-pct-' + i).textContent = pct + '%';
+            });
+        }
+        function voteMaturity(opt) {
+            if (matVoted) return;
+            matVotes[opt]++; localStorage.setItem('matVotes', JSON.stringify(matVotes));
+            matVoted = true; updateMatPoll(); confetti();
+        }
+        updateMatPoll();
+
+        // ===== ENQUETE FUTURO =====
+        let futVotes = JSON.parse(localStorage.getItem('futVotes') || '[0,0,0,0]');
+        let futVoted = false;
+        function updateFutPoll() {
+            const total = futVotes.reduce((a,b) => a+b, 0);
+            document.getElementById('fut-total').textContent = total;
+            futVotes.forEach((v, i) => {
+                const pct = total > 0 ? Math.round((v/total)*100) : 0;
+                document.getElementById('fut-' + i).style.width = pct + '%';
+                document.getElementById('fut-pct-' + i).textContent = pct + '%';
+            });
+        }
+        function voteFuture(opt) {
+            if (futVoted) return;
+            futVotes[opt]++; localStorage.setItem('futVotes', JSON.stringify(futVotes));
+            futVoted = true; updateFutPoll(); confetti();
+        }
+        updateFutPoll();
+
+        // ===== DRAG & DROP SORTER =====
+        let sorterScore = 0, sorterTotal = 5, sorterChecked = false;
+        function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); ev.target.style.opacity = '0.5'; }
+        function allowDrop(ev) { ev.preventDefault(); ev.currentTarget.classList.add('drag-over'); }
+        function dragLeave(ev) { ev.currentTarget.classList.remove('drag-over'); }
+        function drop(ev, zoneType) {
+            ev.preventDefault(); ev.currentTarget.classList.remove('drag-over');
+            const id = ev.dataTransfer.getData("text");
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.style.opacity = '1';
+            el.dataset.dropped = zoneType;
+            ev.currentTarget.appendChild(el);
+        }
+        function checkSorter() {
+            if (sorterChecked) return;
+            sorterChecked = true; sorterScore = 0;
+            document.querySelectorAll('.sorter-item').forEach(el => {
+                const dropped = el.dataset.dropped;
+                const correct = el.dataset.type;
+                el.classList.add('revealed');
+                if (dropped === correct) { el.classList.add('correct'); sorterScore++; }
+                else el.classList.add('wrong');
+            });
+            const scoreEl = document.getElementById('sorter-score');
+            scoreEl.textContent = `Pontuação: ${sorterScore}/${sorterTotal} ${sorterScore === sorterTotal ? '🎉 Perfeito!' : ''}`;
+            scoreEl.style.color = sorterScore === sorterTotal ? 'var(--success)' : (sorterScore >= 3 ? 'var(--warning)' : 'var(--danger)');
+            document.getElementById('btn-check').textContent = '✓ Respostas Verificadas';
+            document.getElementById('btn-check').disabled = true;
+            if (sorterScore === sorterTotal) confetti();
+        }
+        function resetSorter() {
+            sorterChecked = false; sorterScore = 0;
+            document.getElementById('sorter-score').textContent = '';
+            document.getElementById('btn-check').textContent = '✓ Ver Respostas';
+            document.getElementById('btn-check').disabled = false;
+            const pool = document.getElementById('sorter-pool');
+            document.querySelectorAll('.sorter-item').forEach(item => {
+                item.classList.remove('correct', 'wrong', 'revealed');
+                item.style.opacity = '1'; delete item.dataset.dropped;
+                pool.appendChild(item);
+            });
+        }
+
+        // ===== TYPING ANIMATION =====
+        const prompts = [
+            '"Analise o contrato de convênio X, identifique cláusulas de repasse e gere um resumo executivo para aprovação da superintendência."',
+            '"Compile dados de execução orçamentária dos convênios ativos, identifique desvios >10% e gere relatório semanal para a diretoria."',
+            '"Monitore o cronograma da obra do PAC, compare com o baseline e envie alerta no Teams se houver atraso >15 dias."'
+        ];
+        function typePrompt(card, idx) {
+            const box = card.querySelector('.prompt-box');
+            if (box.dataset.typed) return;
+            box.dataset.typed = 'true';
+            const text = prompts[idx];
+            box.innerHTML = '<span class="typing-cursor"></span>';
+            let i = 0;
+            const interval = setInterval(() => {
+                box.innerHTML = text.substring(0, i) + '<span class="typing-cursor">|</span>';
+                i++;
+                if (i > text.length) { clearInterval(interval); box.textContent = text; }
+            }, 30);
+        }
+
+        // ===== CONFETTI =====
+        function confetti() {
+            const colors = ['#0078D4','#8764B8','#00B294','#FF8C00','#10b981','#ef4444'];
+            for (let i = 0; i < 20; i++) {
+                const c = document.createElement('div'); c.className = 'confetti';
+                c.style.width = (6 + Math.random()*6) + 'px'; c.style.height = c.style.width;
+                c.style.background = colors[Math.floor(Math.random()*colors.length)];
+                c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                c.style.left = Math.random() * 100 + '%'; c.style.top = '-10px';
+                c.style.animation = `confettiFall ${2 + Math.random()*2}s ease-out forwards`;
+                document.body.appendChild(c); setTimeout(() => c.remove(), 4000);
+            }
+        }
+        const confettiStyle = document.createElement('style');
+        confettiStyle.textContent = `@keyframes confettiFall { to { transform: translateY(110vh) rotate(720deg); opacity: 0; } }`;
+        document.head.appendChild(confettiStyle);
+
+        // ===== INIT =====
+        updateSlide();
+    </script>
+</body>
+</html>
