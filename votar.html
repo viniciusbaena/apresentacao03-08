@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071026">
+  <title>Participe — Cultura de IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+</head>
+<body class="audience">
+  <div class="audience-bg"></div>
+  <main class="audience-shell">
+    <header>
+      <span class="brand-mark">IA</span>
+      <div><strong>Cultura de IA</strong><small>Experiência ao vivo · Rede Governo</small></div>
+      <i class="connected">conectado</i>
+    </header>
+
+    <section class="audience-hero">
+      <span>VOCÊ FAZ PARTE DA APRESENTAÇÃO</span>
+      <h1>Escolha. Responda. Construa.</h1>
+      <p>As atividades aparecem abaixo. Suas respostas atualizam a tela ao vivo.</p>
+    </section>
+
+    <nav class="activity-tabs">
+      <button class="active" data-tab="maturity"><b>01</b> Meu momento</button>
+      <button data-tab="quiz"><b>02</b> Desafio</button>
+      <button data-tab="lab"><b>03</b> Laboratório</button>
+      <button data-tab="commitment"><b>04</b> Compromisso</button>
+    </nav>
+
+    <section class="activity active" data-activity="maturity">
+      <span class="step-tag">ATIVIDADE 01</span>
+      <h2>Em qual porta você está hoje?</h2>
+      <p>Escolha a alternativa que mais representa seu uso atual.</p>
+      <div class="mobile-options">
+        <button data-vote="maturity:0"><b>01</b><span><strong>Assistente</strong>Peço resumos, textos e análises</span></button>
+        <button data-vote="maturity:1"><b>02</b><span><strong>Parceiro</strong>Estruturo problemas junto com a IA</span></button>
+        <button data-vote="maturity:2"><b>03</b><span><strong>Agente</strong>Delego rotinas com regras claras</span></button>
+        <button data-vote="maturity:3"><b>04</b><span><strong>Equipe</strong>Compartilho padrões e agentes</span></button>
+      </div>
+      <div class="vote-feedback"></div>
+    </section>
+
+    <section class="activity" data-activity="quiz">
+      <span class="step-tag">ATIVIDADE 02</span>
+      <h2>Assistente ou agente?</h2>
+      <p id="mobileScenario">“Toda segunda-feira, leia a base atualizada, priorize contratos com pendências e gere o mesmo resumo gerencial.”</p>
+      <div class="binary-options">
+        <button data-quizvote="assist"><span>✦</span><strong>Assistente</strong><small>Uma conversa ou tarefa pontual</small></button>
+        <button data-quizvote="agent"><span>↻</span><strong>Agente</strong><small>Uma rotina recorrente e definida</small></button>
+      </div>
+      <div class="vote-feedback"></div>
+      <small class="quiz-sync">O cenário muda quando o apresentador avança.</small>
+    </section>
+
+    <section class="activity" data-activity="lab">
+      <span class="step-tag">ATIVIDADE 03</span>
+      <h2>Qual agente construiremos?</h2>
+      <p>Escolha o caso que seria mais útil para a rotina da área de Governo.</p>
+      <div class="mobile-options compact">
+        <button data-vote="lab:0"><b>↯</b><span><strong>Triagem de pendências</strong>Priorizar contratos que exigem atenção</span></button>
+        <button data-vote="lab:1"><b>◎</b><span><strong>Briefing para reuniões</strong>Reunir contexto, riscos e perguntas</span></button>
+        <button data-vote="lab:2"><b>↻</b><span><strong>Resumo de projetos</strong>Sintetizar avanço e pontos críticos</span></button>
+        <button data-vote="lab:3"><b>✎</b><span><strong>Redação padronizada</strong>Produzir rascunhos institucionais</span></button>
+      </div>
+      <div class="vote-feedback"></div>
+    </section>
+
+    <section class="activity" data-activity="commitment">
+      <span class="step-tag">ATIVIDADE 04</span>
+      <h2>Qual será seu próximo passo?</h2>
+      <p>Escolha uma ação pequena para realizar nos próximos 7 dias.</p>
+      <div class="mobile-options compact">
+        <button data-vote="commitment:0"><b>01</b><span><strong>Melhorar um prompt</strong>Aplicar o método PMCEF</span></button>
+        <button data-vote="commitment:1"><b>02</b><span><strong>Resolver um problema</strong>Construir o raciocínio com a IA</span></button>
+        <button data-vote="commitment:2"><b>03</b><span><strong>Prototipar um agente</strong>Começar com uma rotina simples</span></button>
+        <button data-vote="commitment:3"><b>04</b><span><strong>Compartilhar uma prática</strong>Levar o aprendizado para a equipe</span></button>
+      </div>
+      <div class="vote-feedback"></div>
+    </section>
+
+    <footer>Suas respostas são anônimas e usadas somente nesta dinâmica.</footer>
+  </main>
+  <script src="audience.js"></script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+const firebaseConfig = {
+  apiKey: "AIzaSyA_CezWFyTyS_ukNZVkVwm5yQdms1m_k2Y",
+  authDomain: "apresentacao-copilot.firebaseapp.com",
+  databaseURL: "https://apresentacao-copilot-default-rtdb.firebaseio.com",
+  projectId: "apresentacao-copilot",
+  storageBucket: "apresentacao-copilot.firebasestorage.app",
+  messagingSenderId: "101027470679",
+  appId: "1:101027470679:web:ed5078823ce9ffa0de7212"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const root = "culture-ai-v2";
+const scenes = [...document.querySelectorAll(".scene")];
+let current = 0;
+
+const quizData = [
+  {
+    text: "“Toda segunda-feira, leia a base atualizada, priorize contratos com pendências e gere o mesmo resumo gerencial.”",
+    answer: "agent",
+    why: "Agente: é recorrente, previsível e segue regras que podem ser testadas."
+  },
+  {
+    text: "“Resuma esta ata de reunião em cinco pontos e destaque as decisões tomadas.”",
+    answer: "assist",
+    why: "Assistente: é um pedido pontual sobre um conteúdo específico."
+  },
+  {
+    text: "“Sempre que eu fornecer os documentos de uma nova reunião, produza um briefing no padrão definido e liste lacunas.”",
+    answer: "agent",
+    why: "Agente: há repetição, padrão de entrega e limites explícitos."
+  },
+  {
+    text: "“Ajude-me a comparar três caminhos possíveis para este problema, questionando minhas premissas.”",
+    answer: "assist",
+    why: "Assistente: a tarefa é exploratória e muda conforme a conversa."
+  }
+];
+let quizIndex = 0;
+
+const $ = (s, p = document) => p.querySelector(s);
+const $$ = (s, p = document) => [...p.querySelectorAll(s)];
+const pad = n => String(n + 1).padStart(2, "0");
+
+function showScene(next) {
+  if (next < 0 || next >= scenes.length || next === current) return;
+  const old = scenes[current];
+  const direction = next > current ? 1 : -1;
+  old.classList.remove("active");
+  old.classList.toggle("exit-left", direction > 0);
+  scenes[next].classList.remove("exit-left");
+  if (direction < 0) scenes[next].classList.add("exit-left");
+  requestAnimationFrame(() => {
+    scenes[next].classList.add("active");
+    scenes[next].classList.remove("exit-left");
+  });
+  current = next;
+  updateChrome();
+  pauseFinalVideo();
+}
+
+function updateChrome() {
+  $("#currentScene").textContent = pad(current);
+  $("#totalScenes").textContent = String(scenes.length).padStart(2, "0");
+  $("#sceneTitle").textContent = scenes[current].dataset.title;
+  $("#progressBar").style.width = `${((current + 1) / scenes.length) * 100}%`;
+  history.replaceState(null, "", `#${current + 1}`);
+}
+
+$("#prevBtn").addEventListener("click", () => showScene(current - 1));
+$("#nextBtn").addEventListener("click", () => showScene(current + 1));
+$(".brand").addEventListener("click", () => showScene(0));
+document.addEventListener("keydown", e => {
+  if (["ArrowRight", "PageDown", " "].includes(e.key)) { e.preventDefault(); showScene(current + 1); }
+  if (["ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); showScene(current - 1); }
+  if (e.key.toLowerCase() === "f") toggleFullscreen();
+  if (e.key.toLowerCase() === "n") openNotes();
+  if (e.key === "Escape") $$(".modal.open").forEach(closeModal);
+});
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+  else document.exitFullscreen?.();
+}
+$("#fullscreenBtn").addEventListener("click", toggleFullscreen);
+
+function openNotes() {
+  const notes = scenes.map((s, i) => `<article class="${i === current ? "active" : ""}"><b>${pad(i)} · ${s.dataset.title} <em>${s.dataset.time || ""}</em></b><p>${$(".speaker-note", s)?.textContent || ""}</p></article>`).join("");
+  const win = window.open("", "presenter-notes", "width=620,height=760");
+  if (!win) return;
+  win.document.write(`<!doctype html><html><head><title>Notas do apresentador</title><style>body{font:16px system-ui;background:#070b16;color:#eef3ff;margin:0;padding:24px}h1{font-size:22px}article{padding:16px;border-left:3px solid #263354;margin:10px 0;background:#0e162b}article.active{border-color:#35d7ff;background:#13213d}b{color:#35d7ff}em{float:right;color:#9caaca;font-style:normal;font-size:12px}p{color:#c1cae1;line-height:1.45}</style></head><body><h1>Roteiro · 38 minutos</h1>${notes}</body></html>`);
+  win.document.close();
+}
+$("#notesBtn").addEventListener("click", openNotes);
+
+function openModal(el) { el.classList.add("open"); el.setAttribute("aria-hidden", "false"); }
+function closeModal(el) { el.classList.remove("open"); el.setAttribute("aria-hidden", "true"); }
+$("#sourcesBtn").addEventListener("click", () => openModal($("#sourcesModal")));
+$("#openBook").addEventListener("click", () => openModal($("#bookModal")));
+$("#resetLive").addEventListener("click", async () => {
+  if (!confirm("Zerar todas as respostas ao vivo desta apresentação?")) return;
+  await db.ref(root).remove();
+  syncQuiz();
+  $("#resetLive").textContent = "Respostas zeradas ✓";
+  setTimeout(() => $("#resetLive").textContent = "Zerar respostas antes da sessão", 2200);
+});
+$$("[data-close]").forEach(btn => btn.addEventListener("click", () => closeModal(btn.closest(".modal"))));
+$$(".modal").forEach(modal => modal.addEventListener("click", e => { if (e.target === modal) closeModal(modal); }));
+
+const baseUrl = new URL(".", location.href);
+const voteUrl = new URL("votar.html", baseUrl).href;
+const bookUrl = new URL("assets/ebook-modulo-2.pdf", baseUrl).href;
+$$("[data-vote-url]").forEach(el => el.textContent = voteUrl.replace(/^https?:\/\//, ""));
+$$("[data-qr]").forEach(el => new QRCode(el, { text: el.dataset.qr === "book" ? bookUrl : voteUrl, width: 100, height: 100, colorDark: "#071026", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M }));
+
+function valuesOf(snapshot, length) {
+  const raw = snapshot.val() || {};
+  return Array.from({ length }, (_, i) => Number(raw[i] || 0));
+}
+function updateBars(type, values) {
+  const total = values.reduce((a, b) => a + b, 0);
+  const max = Math.max(...values, 1);
+  if (type === "maturity") {
+    values.forEach((v, i) => {
+      $(`[data-bar="${i}"]`).style.width = `${(v / max) * 100}%`;
+      $(`[data-count="${i}"]`).textContent = v;
+    });
+    $("[data-total]").textContent = total;
+  }
+  if (type === "lab") {
+    values.forEach((v, i) => {
+      $(`[data-labbar="${i}"]`).style.width = `${(v / max) * 100}%`;
+      $(`[data-labcount="${i}"]`).textContent = v;
+    });
+  }
+  if (type === "commitment") values.forEach((v, i) => $(`[data-commit="${i}"]`).textContent = v);
+}
+["maturity", "lab", "commitment"].forEach(type => db.ref(`${root}/polls/${type}`).on("value", snap => updateBars(type, valuesOf(snap, 4))));
+
+function renderQuizResults(snapshot) {
+  const raw = snapshot.val() || {};
+  const a = Number(raw.assist || 0), g = Number(raw.agent || 0), total = a + g || 1;
+  $("#quizAssist").textContent = `${Math.round(a / total * 100)}%`;
+  $("#quizAgent").textContent = `${Math.round(g / total * 100)}%`;
+}
+let quizListener = null;
+function syncQuiz() {
+  const item = quizData[quizIndex];
+  $("#quizScenario span").textContent = `CENÁRIO ${quizIndex + 1} DE ${quizData.length}`;
+  $("#quizScenario p").textContent = item.text;
+  $("#answerReveal").textContent = "";
+  db.ref(`${root}/activeQuiz`).set({ index: quizIndex, text: item.text });
+  if (quizListener) db.ref(`${root}/quiz/${quizIndex}`).off("value", quizListener);
+  quizListener = snap => renderQuizResults(snap);
+  db.ref(`${root}/quiz/${quizIndex}`).on("value", quizListener);
+}
+$("#prevScenario").addEventListener("click", () => { quizIndex = (quizIndex - 1 + quizData.length) % quizData.length; syncQuiz(); });
+$("#nextScenario").addEventListener("click", () => { quizIndex = (quizIndex + 1) % quizData.length; syncQuiz(); });
+$("#revealQuiz").addEventListener("click", () => $("#answerReveal").textContent = quizData[quizIndex].why);
+
+const agentCases = [
+  { name: "Radar de Pendências", purpose: "Transforma uma base de contratos em uma lista priorizada, clara e verificável." },
+  { name: "Briefing Governo", purpose: "Reúne documentos e produz contexto, riscos, lacunas e perguntas para uma reunião." },
+  { name: "Pulso de Projetos", purpose: "Consolida atualizações periódicas em avanço, pontos críticos e próximos passos." },
+  { name: "Redator Institucional", purpose: "Cria primeiras versões de comunicados seguindo critérios e estilo definidos." }
+];
+let lastLabValues = [0, 0, 0, 0];
+db.ref(`${root}/polls/lab`).on("value", snap => { lastLabValues = valuesOf(snap, 4); });
+$("#cycleAgent").addEventListener("click", () => {
+  const winner = lastLabValues.indexOf(Math.max(...lastLabValues));
+  $("#agentName").textContent = agentCases[winner].name;
+  $("#agentPurpose").textContent = agentCases[winner].purpose;
+});
+
+const finalVideo = $("#finalVideo");
+function pauseFinalVideo() {
+  if (current !== scenes.length - 1) {
+    finalVideo.pause();
+    $(".scene-finale").classList.remove("playing");
+  }
+}
+$("#playFinal").addEventListener("click", async () => {
+  $(".scene-finale").classList.add("playing");
+  finalVideo.muted = false;
+  finalVideo.currentTime = 0;
+  try { await finalVideo.play(); } catch { finalVideo.controls = true; }
+});
+finalVideo.addEventListener("ended", () => $(".scene-finale").classList.remove("playing"));
+
+const initial = Math.min(Math.max(parseInt(location.hash.slice(1), 10) || 1, 1), scenes.length) - 1;
+if (initial) { scenes[0].classList.remove("active"); scenes[initial].classList.add("active"); current = initial; }
+updateChrome();
+syncQuiz();
