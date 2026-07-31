@@ -143,6 +143,7 @@
     currentAudio: null,
     aiSpeaking: false,
     lastAiSpeechAt: 0
+    ,realtime: false
   };
 
   const html = `
@@ -164,6 +165,7 @@
           <button class="studio-btn" id="studioPause">Ⅱ Pausar IA</button>
           <button class="studio-btn" id="studioResume">↻ Retomar roteiro</button>
           <button class="studio-btn danger" id="studioSilence">■ Silenciar tudo</button>
+          <button class="studio-btn" id="realtimeToggle">◉ Ativar modo Realtime</button>
         </div>
         <div class="studio-divider"></div>
         <div class="studio-section-title"><span>ESCUTA DA SALA</span><button id="studioSettingsBtn">configurar</button></div>
@@ -300,6 +302,10 @@
     setNow(`${persona[who].name}: ${text}`);
     showCaption(who, text);
     try {
+      if (state.realtime && window.realtimeCopresenter?.connected) {
+        await window.realtimeCopresenter.speak(text);
+        return;
+      }
       const source = await apiSpeech(who, text);
       if (source) {
         await new Promise((resolve, reject) => {
@@ -744,6 +750,33 @@
   $("#studioPause").onclick = () => pause();
   $("#studioResume").onclick = resume;
   $("#studioSilence").onclick = silence;
+  $("#realtimeToggle").onclick = async () => {
+    const button = $("#realtimeToggle");
+    if (state.realtime) {
+      window.realtimeCopresenter?.disconnect();
+      state.realtime = false;
+      if (!state.listening) startListening();
+      button.textContent = "◉ Ativar modo Realtime";
+      setStatus(state.listening ? "apresentando · escuta ativa" : "API conectada · modo ao vivo", "ready");
+      return;
+    }
+    button.disabled = true;
+    button.textContent = "Conectando Realtime...";
+    try {
+      if (state.listening) stopListening();
+      await window.realtimeCopresenter.connect({
+        inputDeviceId: state.inputDevice,
+        outputDeviceId: state.outputDevice,
+        instructions: "Você é o núcleo de voz de uma apresentação em português brasileiro sobre maturidade no uso da IA e criação de agentes no Microsoft 365 Copilot. Entenda perguntas e comentários livres, não invente políticas internas, preserve LGPD e responsabilidade humana. Seja natural, conciso e não interrompa pessoas. O roteiro e os slides são controlados pelo navegador; responda somente quando for chamado ou quando receber uma fala diretamente dirigida a você."
+      });
+      state.realtime = true;
+      button.textContent = "● Realtime ativo · desativar";
+      setStatus("Realtime conectado · escuta contínua", "ready");
+    } catch (error) {
+      button.textContent = "◉ Ativar modo Realtime";
+      setStatus(`Realtime indisponível: ${error.message}`, "");
+    } finally { button.disabled = false; }
+  };
   $("#studioSettingsBtn").onclick = () => { el.settings.classList.toggle("open"); if (el.settings.classList.contains("open")) refreshDevices(); };
   $("#enableListening").onclick = () => state.listening ? stopListening() : startListening();
   $("#clearTranscript").onclick = () => el.transcript.innerHTML = "<em>Nenhuma fala capturada.</em>";

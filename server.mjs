@@ -12,6 +12,7 @@ const apiKey = process.env.OPENAI_API_KEY || "";
 const textModel = process.env.OPENAI_TEXT_MODEL || "gpt-5.6-luna";
 const ttsModel = process.env.OPENAI_TTS_MODEL || "gpt-4o-mini-tts";
 const transcriptionModel = process.env.OPENAI_TRANSCRIPTION_MODEL || "gpt-4o-mini-transcribe";
+const realtimeModel = process.env.OPENAI_REALTIME_MODEL || "gpt-realtime-2.1";
 const cacheDir = join(root, ".cache", "audio");
 mkdirSync(cacheDir, { recursive: true });
 
@@ -26,11 +27,12 @@ const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
     if (url.pathname === "/api/status") return json(res, 200, {
-      configured: Boolean(apiKey), textModel, ttsModel, transcriptionModel
+      configured: Boolean(apiKey), textModel, ttsModel, transcriptionModel, realtimeModel
     });
     if (url.pathname === "/api/respond" && req.method === "POST") return respond(req, res);
     if (url.pathname === "/api/speech" && req.method === "POST") return speech(req, res);
     if (url.pathname === "/api/transcribe" && req.method === "POST") return transcribe(req, res);
+    if (url.pathname === "/api/realtime/token" && req.method === "POST") return realtimeToken(req, res);
     return staticFile(url.pathname, req, res);
   } catch (error) {
     console.error(error);
@@ -115,6 +117,22 @@ async function transcribe(req, res) {
   const data = await response.json();
   if (!response.ok) return json(res, response.status, { error: data.error?.message || "Falha na transcrição." });
   json(res, 200, { text: data.text || "" });
+}
+
+async function realtimeToken(req, res) {
+  requireKey(res);
+  if (!apiKey) return;
+  const body = JSON.parse((await readBody(req, 64 * 1024)).toString("utf8") || "{}");
+  const instructions = String(body.instructions || "Você é um copresentador natural de uma apresentação sobre maturidade em IA e agentes. Responda em português brasileiro, seja conciso e aguarde a vez do público.").slice(0, 12000);
+  const voice = ["marin", "cedar", "coral", "sage", "verse"].includes(body.voice) ? body.voice : "marin";
+  const response = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ session: { type: "realtime", model: realtimeModel, instructions, audio: { output: { voice } } } })
+  });
+  const data = await response.json();
+  if (!response.ok) return json(res, response.status, { error: data.error?.message || "Falha ao criar sessão Realtime." });
+  json(res, 200, { client_secret: data.value || data.client_secret?.value || data.client_secret, model: realtimeModel });
 }
 
 function staticFile(pathname, req, res) {
