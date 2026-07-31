@@ -154,6 +154,7 @@
     <section class="scene scene-quiz" data-title="Assistente ou agente?" data-time="3 min" data-poll="quiz">
       <div class="eyebrow">DESAFIO RELÂMPAGO</div>
       <h2>Assistente ou agente?</h2>
+      <div class="quiz-qr"><div class="qr" data-qr="vote"></div><span>Fechou a página? Escaneie novamente.</span></div>
       <div class="quiz-stage">
         <div class="scenario" id="quizScenario">
           <span>CENÁRIO 1 DE 4</span>
@@ -206,32 +207,26 @@
       <aside class="speaker-note">Conecte o PMCEF, apresentado no e-book, à configuração de agentes. O sexto elemento — limites — torna explícito o que deve permanecer humano.</aside>
     </section>
 
-    <section class="scene scene-lab" data-title="Laboratório coletivo" data-time="5 min" data-poll="lab">
+    <section class="scene scene-lab" data-title="Laboratório coletivo" data-time="8 min" data-poll="lab">
       <div class="lab-head">
-        <div><div class="eyebrow">LABORATÓRIO AO VIVO</div><h2>Vamos criar um agente juntos.</h2></div>
-        <div class="mini-qr"><div class="qr" data-qr="vote"></div><span>Vote pelo celular</span></div>
+        <div><div class="eyebrow">LABORATÓRIO AO VIVO · <span id="labStepLabel">ETAPA 1 DE 7</span></div><h2>Vamos criar um agente juntos.</h2><p class="lab-question" id="labQuestion">Primeiro, a sala escolhe um caso de uso.</p></div>
+        <div class="mini-qr"><div class="qr" data-qr="vote"></div><span>Fechou? Escaneie novamente.<br>Vote nesta etapa.</span></div>
       </div>
       <div class="lab-grid">
         <div class="lab-votes">
-          <p>A sala escolhe o caso de uso:</p>
-          <div class="choice"><span>Triagem de pendências</span><i data-labbar="0"></i><b data-labcount="0">0</b></div>
-          <div class="choice"><span>Briefing para reuniões</span><i data-labbar="1"></i><b data-labcount="1">0</b></div>
-          <div class="choice"><span>Resumo de projetos</span><i data-labbar="2"></i><b data-labcount="2">0</b></div>
-          <div class="choice"><span>Redação padronizada</span><i data-labbar="3"></i><b data-labcount="3">0</b></div>
+          <p id="labVoteHint">A sala escolhe uma alternativa. A mais votada entra no prompt.</p>
+          <div id="labChoices"></div>
+          <div class="lab-progress" id="labProgress">Ainda não votamos nesta etapa.</div>
         </div>
         <div class="agent-card-live">
-          <div class="agent-card-top"><span>AGENTE EM CONSTRUÇÃO</span><i></i></div>
-          <h3 id="agentName">Radar de Pendências</h3>
-          <p id="agentPurpose">Transforma uma base de contratos em uma lista priorizada, clara e verificável.</p>
-          <div class="agent-rules">
-            <span><b>FONTE</b>Somente a base fornecida</span>
-            <span><b>ENTREGA</b>Tabela + síntese executiva</span>
-            <span><b>LIMITE</b>Não atribuir causas nem decidir</span>
-          </div>
-          <button class="action" id="cycleAgent">Aplicar escolha vencedora</button>
+          <div class="agent-card-top"><span id="labCardKicker">AGENTE EM CONSTRUÇÃO</span><i></i></div>
+          <h3 id="agentName">O prompt vai nascer da sala.</h3>
+          <p id="agentPurpose">Em cada etapa, a opção vencedora é adicionada ao combinado do agente.</p>
+          <div class="agent-rules" id="labSelections"><span><b>CASO</b>Aguardando votação</span><span><b>PMCEF + LIMITES</b>6 etapas pela frente</span><span><b>RESULTADO</b>Prompt completo ao final</span></div>
+          <button class="action" id="nextLabStep">Abrir votação da próxima etapa</button>
         </div>
       </div>
-      <aside class="speaker-note">A votação escolhe o caso. Clique “Aplicar escolha vencedora”. Convide o grupo a melhorar oralmente Papel, Meta, Contexto, Expectativa, Fontes e Limites.</aside>
+      <aside class="speaker-note">Conduza uma votação por vez: caso de uso, Papel, Meta, Contexto, Expectativa, Fontes e Limites. Ao final, revele o prompt completo que a sala construiu.</aside>
     </section>
 
     <section class="scene" data-title="Criar no Copilot" data-time="3 min">

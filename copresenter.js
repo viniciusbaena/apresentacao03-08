@@ -51,8 +51,10 @@
       ["lia", "E, para uma rotina recorrente, acrescentamos algo essencial: os limites. O agente precisa saber não apenas o que fazer, mas também onde deve parar. É esse combinado que vamos testar no laboratório."]
     ],
     [
-      ["lia", "Chegou o laboratório. Vocês vão escolher qual agente construiremos juntos."],
-      ["icaro", "Depois da votação, vamos transformar a opção vencedora em papel, meta, contexto, formato, fontes e limites. E, na sequência, veremos como esse combinado vira um protótipo no Copilot."]
+      ["lia", "Chegou o laboratório. Agora a sala vai construir um agente, uma decisão de cada vez."],
+      ["icaro", "Começamos pelo caso de uso e seguimos pelo PMCEF: Papel, Meta, Contexto, Expectativa e Fontes. Fechamos com Limites — porque um bom agente também sabe onde parar."],
+      ["lia", "Em cada etapa, escaneiem o QR Code, escolham a alternativa que melhor representa o trabalho de vocês e aguardem o resultado aparecer aqui."],
+      ["icaro", "Quando todas as etapas terminarem, o prompt completo definido pela sala ficará visível. Não é um texto decorativo: é o combinado que vamos levar para o Copilot e testar juntos."]
     ],
     [
       ["lia", "No Microsoft 365 Copilot, esse primeiro protótipo pode ser criado sem código, usando linguagem natural."],

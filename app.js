@@ -65,7 +65,11 @@ function showScene(next) {
 
 function resetPollForScene(scene) {
   const type = scene.dataset.poll;
-  if (type === "maturity" || type === "lab" || type === "commitment") {
+  if (type === "lab") {
+    db.ref(`${root}/polls/labSteps`).remove();
+    db.ref(`${root}/polls/lab`).remove();
+    broadcastAudienceReset();
+  } else if (type === "maturity" || type === "commitment") {
     db.ref(`${root}/polls/${type}`).remove();
     broadcastAudienceReset();
   }
@@ -140,7 +144,7 @@ const baseUrl = isLocalPreview
 const voteUrl = new URL("votar.html", baseUrl).href;
 const bookUrl = new URL("assets/ebook-modulo-2.pdf", baseUrl).href;
 $$("[data-vote-url]").forEach(el => el.textContent = voteUrl.replace(/^https?:\/\//, ""));
-$$("[data-qr]").forEach(el => new QRCode(el, { text: el.dataset.qr === "book" ? bookUrl : voteUrl, width: 100, height: 100, colorDark: "#071026", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M }));
+$$("[data-qr]").forEach(el => new QRCode(el, { text: el.dataset.qr === "book" ? bookUrl : voteUrl, width: 150, height: 150, colorDark: "#071026", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M }));
 
 function valuesOf(snapshot, length) {
   const raw = snapshot.val() || {};
@@ -187,19 +191,52 @@ $("#prevScenario").addEventListener("click", () => { quizIndex = (quizIndex - 1 
 $("#nextScenario").addEventListener("click", () => { quizIndex = (quizIndex + 1) % quizData.length; syncQuiz(); });
 $("#revealQuiz").addEventListener("click", () => $("#answerReveal").textContent = quizData[quizIndex].why);
 
-const agentCases = [
-  { name: "Radar de Pendências", purpose: "Transforma uma base de contratos em uma lista priorizada, clara e verificável." },
-  { name: "Briefing Governo", purpose: "Reúne documentos e produz contexto, riscos, lacunas e perguntas para uma reunião." },
-  { name: "Pulso de Projetos", purpose: "Consolida atualizações periódicas em avanço, pontos críticos e próximos passos." },
-  { name: "Redator Institucional", purpose: "Cria primeiras versões de comunicados seguindo critérios e estilo definidos." }
+const agentBuildSteps = [
+  { title: "Caso de uso", question: "Que rotina merece virar nosso primeiro agente?", options: [["Radar de Pendências", "Priorizar contratos e itens que exigem atenção"], ["Briefing Governo", "Reunir contexto, riscos e perguntas para reuniões"], ["Pulso de Projetos", "Consolidar avanços, pontos críticos e próximos passos"], ["Redator Institucional", "Criar rascunhos seguindo padrão e critérios"]] },
+  { title: "Papel", question: "Como o agente deve atuar?", options: [["Analista criterioso", "Organizar evidências antes de sugerir qualquer ação"], ["Facilitador objetivo", "Transformar informação dispersa em próximos passos"], ["Revisor cuidadoso", "Encontrar lacunas, inconsistências e riscos"]] },
+  { title: "Meta", question: "Qual resultado define que o agente cumpriu seu papel?", options: [["Síntese priorizada", "Entregar uma visão curta, ordenada e acionável"], ["Decisão preparada", "Evidenciar o que falta para uma decisão humana"], ["Rascunho verificável", "Produzir uma primeira versão pronta para revisão"]] },
+  { title: "Contexto", question: "Que contexto deve orientar o raciocínio?", options: [["Rede Governo", "Realidade operacional, regulatória e institucional da Caixa"], ["Público técnico", "Linguagem para engenheiros, arquitetos e equipes operacionais"], ["Cenário fornecido", "Usar somente documentos, datas e premissas da demanda"]] },
+  { title: "Expectativa", question: "Como a resposta deve chegar para a equipe?", options: [["Tabela + síntese", "Evidências em tabela e conclusão executiva curta"], ["Passo a passo", "Critérios, achados e recomendação em sequência"], ["Alerta + fonte", "Prioridade, justificativa e origem de cada ponto"]] },
+  { title: "Fontes", question: "Onde o agente deve buscar a verdade?", options: [["Base fornecida", "Somente arquivos e links indicados na tarefa"], ["Fontes oficiais", "Documentos institucionais e referências verificáveis"], ["Base + oficiais", "Cruzar a base com fontes oficiais, sinalizando diferenças"]] },
+  { title: "Limites", question: "O que o agente nunca deve fazer sozinho?", options: [["Não decidir", "Não aprovar, contratar, classificar risco ou substituir julgamento"], ["Não inventar", "Não preencher lacunas com suposições; declarar incertezas"], ["Não expor", "Não usar nem reproduzir dados fora do escopo autorizado"]] },
 ];
-let lastLabValues = [0, 0, 0, 0];
-db.ref(`${root}/polls/lab`).on("value", snap => { lastLabValues = valuesOf(snap, 4); });
-$("#cycleAgent").addEventListener("click", () => {
-  const winner = lastLabValues.indexOf(Math.max(...lastLabValues));
-  $("#agentName").textContent = agentCases[winner].name;
-  $("#agentPurpose").textContent = agentCases[winner].purpose;
-});
+let labStep = 0;
+let labValues = [];
+let labListener = null;
+let labListenerPath = null;
+const labSelections = {};
+function labPrompt() {
+  return agentBuildSteps.map((step, i) => { const option = step.options[labSelections[i] ?? 0]; return `${step.title}: ${option[0]} — ${option[1]}`; }).join("\n") + "\n\nTrabalhe com clareza, cite as fontes usadas, sinalize incertezas e peça validação humana antes de qualquer decisão.";
+}
+function renderLabPrompt() {
+  const step = agentBuildSteps[labStep];
+  const complete = Object.keys(labSelections).length === agentBuildSteps.length;
+  $("#labStepLabel").textContent = `ETAPA ${labStep + 1} DE ${agentBuildSteps.length} · ${step.title.toUpperCase()}`;
+  $("#labQuestion").textContent = step.question;
+  $("#labChoices").innerHTML = step.options.map((option, i) => `<div class="choice"><span>${option[0]}</span><i data-labbar="${i}"></i><b data-labcount="${i}">0</b></div>`).join("");
+  $("#agentName").textContent = complete ? "Prompt da sala" : `${step.title} em votação`;
+  $("#agentPurpose").textContent = complete ? labPrompt() : "A opção vencedora entra no combinado do agente.";
+  $("#labCardKicker").textContent = complete ? "AGENTE PRONTO PARA VALIDAR" : "AGENTE EM CONSTRUÇÃO";
+  $("#labSelections").innerHTML = agentBuildSteps.map((s, i) => `<span><b>${s.title.toUpperCase()}</b>${labSelections[i] === undefined ? "Aguardando votação" : s.options[labSelections[i]][0]}</span>`).join("");
+  $("#nextLabStep").textContent = complete ? "Prompt completo definido pela sala" : labStep === agentBuildSteps.length - 1 ? "Revelar prompt completo" : "Abrir votação da próxima etapa";
+  db.ref(`${root}/activeLab`).set({ step: labStep, title: step.title, question: step.question, options: step.options.map(o => o[0]) });
+}
+function syncLabStep() {
+  const step = agentBuildSteps[labStep];
+  if (labListener && labListenerPath) db.ref(labListenerPath).off("value", labListener);
+  labListener = snap => {
+    labValues = valuesOf(snap, step.options.length);
+    const max = Math.max(...labValues, 1);
+    step.options.forEach((_, i) => { const bar = $(`[data-labbar="${i}"]`); const count = $(`[data-labcount="${i}"]`); if (bar) bar.style.width = `${labValues[i] / max * 100}%`; if (count) count.textContent = labValues[i]; });
+    const total = labValues.reduce((a, b) => a + b, 0);
+    $("#labProgress").textContent = total ? `${total} voto${total === 1 ? "" : "s"} nesta etapa · a liderança entra no prompt` : "Ainda não votamos nesta etapa.";
+  };
+  labListenerPath = `${root}/polls/labSteps/${labStep}`;
+  db.ref(labListenerPath).on("value", labListener);
+  renderLabPrompt();
+}
+$("#nextLabStep").addEventListener("click", () => { const winner = labValues.indexOf(Math.max(...labValues)); labSelections[labStep] = winner < 0 ? 0 : winner; if (labStep < agentBuildSteps.length - 1) { labStep += 1; syncLabStep(); } else { renderLabPrompt(); $("#nextLabStep").disabled = true; } });
+syncLabStep();
 
 const finalVideo = $("#finalVideo");
 function pauseFinalVideo() {
