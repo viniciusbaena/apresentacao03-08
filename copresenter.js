@@ -332,12 +332,12 @@
       state.line = i;
       await speak(lines[i][0], lines[i][1], myRun);
       state.line = i + 1;
-      if (state.listening && !state.answering) await wait(180);
+      if (state.listening && !state.answering) await wait(90);
     }
     if (myRun !== state.runId || !state.running || state.paused) return;
     state.line = 0;
     if (sceneIndex < script.length - 1) {
-      await wait(600);
+      await wait(260);
       window.presentationControl?.next();
     }
   }
@@ -380,6 +380,8 @@
     state.paused = false;
     state.scene = window.presentationControl?.current || 0;
     state.line = 0;
+    state.manualHold = false;
+    state.interactiveHold = false;
     state.runId++;
     document.body.classList.add("studio-running");
     setStatus(state.listening ? "apresentando · escuta ativa" : "apresentando", "live");
@@ -748,7 +750,7 @@
       state.runId++;
       state.currentAudio?.pause();
       speechSynthesis?.cancel();
-      if (!presenterOnly && state.manualHold) {
+      if (!presenterOnly && state.manualHold && state.interactiveHold) {
         state.interactiveHold = true;
         pause("Slide pronto. Diga que podemos continuar.");
         return;
