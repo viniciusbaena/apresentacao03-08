@@ -13,6 +13,14 @@ const root = "culture-ai-v2";
 const $ = (s, p = document) => p.querySelector(s);
 const $$ = (s, p = document) => [...p.querySelectorAll(s)];
 
+db.ref(`${root}/session/resetId`).on("value", snap => {
+  const resetId = String(snap.val() || "");
+  if (!resetId || localStorage.getItem(`${root}:session`) === resetId) return;
+  localStorage.setItem(`${root}:session`, resetId);
+  Object.keys(localStorage).filter(key => key.startsWith(`${root}:` ) && key !== `${root}:session`).forEach(key => localStorage.removeItem(key));
+  window.location.reload();
+});
+
 function showTab(name) {
   $$(".activity-tabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
   $$(".activity").forEach(s => s.classList.toggle("active", s.dataset.activity === name));

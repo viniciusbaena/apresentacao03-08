@@ -57,6 +57,33 @@ function showScene(next) {
   current = next;
   updateChrome();
   pauseFinalVideo();
+  resetPollForScene(scenes[current]);
+  window.dispatchEvent(new CustomEvent("presentation:scenechange", {
+    detail: { index: current, title: scenes[current].dataset.title }
+  }));
+}
+
+function resetPollForScene(scene) {
+  const type = scene.dataset.poll;
+  if (type === "maturity" || type === "lab" || type === "commitment") {
+    db.ref(`${root}/polls/${type}`).remove();
+    broadcastAudienceReset();
+  }
+  if (type === "quiz") {
+    db.ref(`${root}/quiz`).remove();
+    broadcastAudienceReset();
+    syncQuiz();
+  }
+}
+
+function resetAllPolls() {
+  db.ref(`${root}/polls`).remove();
+  db.ref(`${root}/quiz`).remove();
+  broadcastAudienceReset();
+}
+
+function broadcastAudienceReset() {
+  db.ref(`${root}/session/resetId`).set(String(Date.now()));
 }
 
 function updateChrome() {
@@ -96,7 +123,6 @@ $("#notesBtn").addEventListener("click", openNotes);
 function openModal(el) { el.classList.add("open"); el.setAttribute("aria-hidden", "false"); }
 function closeModal(el) { el.classList.remove("open"); el.setAttribute("aria-hidden", "true"); }
 $("#sourcesBtn").addEventListener("click", () => openModal($("#sourcesModal")));
-$("#openBook").addEventListener("click", () => openModal($("#bookModal")));
 $("#resetLive").addEventListener("click", async () => {
   if (!confirm("Zerar todas as respostas ao vivo desta apresentação?")) return;
   await db.ref(root).remove();
@@ -107,7 +133,10 @@ $("#resetLive").addEventListener("click", async () => {
 $$("[data-close]").forEach(btn => btn.addEventListener("click", () => closeModal(btn.closest(".modal"))));
 $$(".modal").forEach(modal => modal.addEventListener("click", e => { if (e.target === modal) closeModal(modal); }));
 
-const baseUrl = new URL(".", location.href);
+const isLocalPreview = ["localhost", "127.0.0.1"].includes(location.hostname);
+const baseUrl = isLocalPreview
+  ? new URL("https://viniciusbaena.github.io/apresentacao03-08/")
+  : new URL(".", location.href);
 const voteUrl = new URL("votar.html", baseUrl).href;
 const bookUrl = new URL("assets/ebook-modulo-2.pdf", baseUrl).href;
 $$("[data-vote-url]").forEach(el => el.textContent = voteUrl.replace(/^https?:\/\//, ""));
@@ -190,4 +219,19 @@ finalVideo.addEventListener("ended", () => $(".scene-finale").classList.remove("
 const initial = Math.min(Math.max(parseInt(location.hash.slice(1), 10) || 1, 1), scenes.length) - 1;
 if (initial) { scenes[0].classList.remove("active"); scenes[initial].classList.add("active"); current = initial; }
 updateChrome();
+resetAllPolls();
+resetPollForScene(scenes[current]);
 syncQuiz();
+
+window.presentationControl = {
+  get current() { return current; },
+  get total() { return scenes.length; },
+  get title() { return scenes[current].dataset.title; },
+  get interactive() { return Boolean(scenes[current].dataset.poll || scenes[current].querySelector("[data-qr]")); },
+  get presenterOnly() { return scenes[current].dataset.presenterOnly === "true"; },
+  get presenterCall() { return scenes[current].dataset.presenterCall === "true"; },
+  get presenterHandoff() { return scenes[current].dataset.presenterHandoff === "true"; },
+  goTo(index) { showScene(index); },
+  next() { showScene(current + 1); },
+  previous() { showScene(current - 1); }
+};
