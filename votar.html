@@ -62,13 +62,8 @@
     <section class="activity" data-activity="lab">
       <span class="step-tag">ATIVIDADE 03</span>
       <h2>Qual agente construiremos?</h2>
-      <p>Escolha o caso que seria mais útil para a rotina da área de Governo.</p>
-      <div class="mobile-options compact">
-        <button data-vote="lab:0"><b>↯</b><span><strong>Triagem de pendências</strong>Priorizar contratos que exigem atenção</span></button>
-        <button data-vote="lab:1"><b>◎</b><span><strong>Briefing para reuniões</strong>Reunir contexto, riscos e perguntas</span></button>
-        <button data-vote="lab:2"><b>↻</b><span><strong>Resumo de projetos</strong>Sintetizar avanço e pontos críticos</span></button>
-        <button data-vote="lab:3"><b>✎</b><span><strong>Redação padronizada</strong>Produzir rascunhos institucionais</span></button>
-      </div>
+      <p id="mobileLabQuestion">A sala escolhe uma etapa por vez. A opção mais votada entra no prompt.</p>
+      <div class="mobile-options compact" id="labOptions"></div>
       <div class="vote-feedback"></div>
     </section>
 

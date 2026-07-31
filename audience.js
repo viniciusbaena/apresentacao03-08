@@ -75,5 +75,30 @@ $$("[data-quizvote]").forEach(btn => btn.addEventListener("click", () => {
   $(".vote-feedback", activity).textContent = "✓ Resposta registrada. Aguarde a revelação!";
 }));
 
+let activeLabStep = 0;
+function renderLabActivity(data) {
+  if (!data || !Array.isArray(data.options)) return;
+  activeLabStep = Number(data.step || 0);
+  $("#mobileLabQuestion").textContent = `${data.title}: ${data.question}`;
+  const container = $("#labOptions");
+  const previous = localStorage.getItem(`culture-ai-v2:lab:${activeLabStep}`);
+  container.innerHTML = data.options.map((label, i) => `<button data-labvote="${i}"><b>${String(i + 1).padStart(2, "0")}</b><span><strong>${label}</strong>Votar nesta alternativa para o prompt da sala</span></button>`).join("");
+  $$('[data-labvote]', container).forEach(btn => {
+    btn.disabled = previous !== null;
+    if (String(btn.dataset.labvote) === previous) btn.classList.add("selected");
+    btn.addEventListener("click", () => {
+      if (localStorage.getItem(`culture-ai-v2:lab:${activeLabStep}`) !== null) return;
+      const index = Number(btn.dataset.labvote);
+      db.ref(`${root}/polls/labSteps/${activeLabStep}/${index}`).transaction(v => (v || 0) + 1);
+      localStorage.setItem(`culture-ai-v2:lab:${activeLabStep}`, String(index));
+      $$('[data-labvote]', container).forEach(b => b.disabled = true);
+      btn.classList.add("selected");
+      $(".vote-feedback", $('[data-activity="lab"]')).textContent = "✓ Voto registrado nesta etapa. Aguarde a próxima!";
+    });
+  });
+  $(".vote-feedback", $('[data-activity="lab"]')).textContent = previous !== null ? "✓ Seu voto nesta etapa já está registrado." : "";
+}
+db.ref(`${root}/activeLab`).on("value", snap => renderLabActivity(snap.val()));
+
 window.addEventListener("online", () => $(".connected").textContent = "conectado");
 window.addEventListener("offline", () => $(".connected").textContent = "sem conexão");
