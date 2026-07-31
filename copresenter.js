@@ -78,8 +78,9 @@
     ],
     [
       ["lia", "A tecnologia já está disponível. O que transforma possibilidade em valor é uma decisão simples."],
-      ["icaro", "Começar."],
-      ["lia", "Obrigada pela conversa. E lembrem-se: esta foi uma apresentação conduzida com vozes de inteligência artificial."]
+      ["icaro", "Começar — com curiosidade, critério e responsabilidade."],
+      ["lia", "Nós encerramos por aqui. Vinicius, a palavra final é sua."],
+      ["icaro", "Obrigado, pessoal. Quando você concluir, o vídeo de encerramento pode começar."]
     ]
   ];
 
@@ -341,6 +342,14 @@
     }
     if (myRun !== state.runId || !state.running || state.paused) return;
     state.line = 0;
+    if (sceneIndex === script.length - 1) {
+      state.running = false;
+      state.manualHold = true;
+      state.interactiveHold = true;
+      stopListening();
+      setStatus("Aguardando o encerramento do Vinícius", "");
+      return;
+    }
     if (sceneIndex < script.length - 1) {
       await wait(260);
       window.presentationControl?.next();
