@@ -139,7 +139,9 @@
     closingDone: false,
     inputDevice: savedAudio.inputDevice || "",
     outputDevice: savedAudio.outputDevice || "",
-    currentAudio: null
+    currentAudio: null,
+    aiSpeaking: false,
+    lastAiSpeechAt: 0
   };
 
   const html = `
@@ -292,6 +294,7 @@
 
   async function speak(who, text, runId = state.runId) {
     if (runId !== state.runId || state.paused) return;
+    state.aiSpeaking = true;
     setPersona(who, true);
     setNow(`${persona[who].name}: ${text}`);
     showCaption(who, text);
@@ -315,6 +318,8 @@
       await browserSpeech(who, text);
     } finally {
       state.currentAudio = null;
+      state.aiSpeaking = false;
+      state.lastAiSpeechAt = performance.now();
       setPersona(who, false);
       hideCaption();
     }
@@ -631,7 +636,7 @@
       for (const n of data) { const v = (n - 128) / 128; sum += v * v; }
       const rms = Math.sqrt(sum / data.length);
       el.meter.style.width = `${Math.min(100, rms * 700)}%`;
-      if (state.bargeIn && state.running && !state.paused && !state.answering && rms > 0.04) {
+      if (state.bargeIn && !state.aiSpeaking && state.running && !state.paused && !state.answering && rms > 0.04) {
         if (!state.bargeInSince) state.bargeInSince = performance.now();
         if (performance.now() - state.bargeInSince > 180 && performance.now() - state.lastBargeIn > 1500) {
           state.lastBargeIn = performance.now();
@@ -695,6 +700,10 @@
 
   async function transcribe(blob) {
     el.listener.textContent = "Transcrevendo trecho...";
+    if (state.aiSpeaking || performance.now() - state.lastAiSpeechAt < 900) {
+      el.listener.textContent = "Escuta ativa · aguardando fala";
+      return;
+    }
     try {
       const res = await fetch("/api/transcribe", {
         method: "POST",
